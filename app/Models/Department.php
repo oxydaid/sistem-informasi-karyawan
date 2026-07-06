@@ -1,0 +1,15 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Attributes\Guarded;
+use Illuminate\Database\Eloquent\Model;
+
+#[Guarded(['id'])]
+class Department extends Model
+{
+    public function positions()
+    {
+        return $this->hasMany(Position::class);
+    }
+}
