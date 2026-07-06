@@ -1,19 +1,28 @@
-const express = require('express');
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, delay } = require('@whiskeysockets/baileys');
-const pino = require('pino');
-const path = require('path');
-const fs = require('fs');
-const mysql = require('mysql2/promise');
-const qrcode = require('qrcode');
+import express from 'express';
+import makeWASocket, { useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, delay } from '@whiskeysockets/baileys';
+import pino from 'pino';
+import path from 'path';
+import fs from 'fs';
+import mysql from 'mysql2/promise';
+import qrcode from 'qrcode';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 
-// Load environment variables from parent directory
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables
+if (fs.existsSync(path.join(__dirname, '.env'))) {
+    dotenv.config({ path: path.join(__dirname, '.env') });
+} else {
+    dotenv.config({ path: path.join(__dirname, '../.env') });
+}
 
 const app = express();
 app.use(express.json());
 
 const PORT = process.env.WA_GATEWAY_PORT || 6969;
-const HOST = process.env.WA_GATEWAY_HOST || '127.0.0.1';
+const HOST = process.env.WA_GATEWAY_HOST || '0.0.0.0';
 const SESSION_DIR = path.join(__dirname, 'session_auth');
 
 let sock = null;
