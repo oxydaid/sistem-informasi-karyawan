@@ -59,7 +59,13 @@ class WhatsappGatewayService
                 ->get($this->apiUrl.'/status');
 
             if ($response->successful()) {
-                return $response->json();
+                $json = $response->json();
+
+                return is_array($json) ? $json : [
+                    'status' => false,
+                    'connection' => 'disconnected',
+                    'message' => 'Invalid status response format.',
+                ];
             }
 
             return [
@@ -115,7 +121,9 @@ class WhatsappGatewayService
                 ->post($this->apiUrl.'/send-message', $payload);
 
             if ($response->successful()) {
-                return $response->json();
+                $json = $response->json();
+
+                return is_array($json) ? $json : ['status' => true];
             }
 
             Log::error('WhatsApp Gateway sendMessage failed', [
@@ -175,7 +183,9 @@ class WhatsappGatewayService
                 ->post($this->apiUrl.'/broadcast', $payload);
 
             if ($response->successful()) {
-                return $response->json();
+                $json = $response->json();
+
+                return is_array($json) ? $json : ['status' => true];
             }
 
             Log::error('WhatsApp Gateway broadcast failed', [
@@ -213,7 +223,9 @@ class WhatsappGatewayService
                 ->post($this->apiUrl.'/logout');
 
             if ($response->successful()) {
-                return $response->json();
+                $json = $response->json();
+
+                return is_array($json) ? $json : ['status' => true];
             }
 
             return [
