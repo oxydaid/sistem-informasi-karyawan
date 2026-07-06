@@ -210,6 +210,37 @@ class WhatsappGatewayService
     }
 
     /**
+     * Trigger initialization of the pairing session / QR code generation.
+     */
+    public function connect(): array
+    {
+        if (! $this->apiUrl) {
+            return ['status' => false, 'message' => 'API URL not configured.'];
+        }
+
+        try {
+            $response = Http::withHeaders($this->getHeaders())
+                ->post($this->apiUrl.'/connect');
+
+            if ($response->successful()) {
+                $json = $response->json();
+
+                return is_array($json) ? $json : ['status' => true];
+            }
+
+            return [
+                'status' => false,
+                'message' => $response->json('message') ?? 'Failed to trigger connection session.',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' => 'Gateway server is unreachable.',
+            ];
+        }
+    }
+
+    /**
      * Log out and disconnect the WhatsApp Gateway session.
      */
     public function logout(): array

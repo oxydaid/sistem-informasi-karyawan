@@ -154,6 +154,23 @@ class AppSetting extends Component
     }
 
     /**
+     * Trigger session connection/QR code generation for WhatsApp
+     */
+    public function connectWhatsapp()
+    {
+        $gateway = new WhatsappGatewayService;
+        $response = $gateway->connect();
+
+        if ($response['status'] ?? false) {
+            $this->dispatch('toast', type: 'success', message: 'Inisialisasi pairing WhatsApp berhasil. Silakan tunggu QR Code muncul.');
+        } else {
+            $this->dispatch('toast', type: 'error', message: 'Gagal inisialisasi: '.($response['message'] ?? 'server offline'));
+        }
+
+        $this->updateGatewayStatus();
+    }
+
+    /**
      * Terminate/Logout WhatsApp Gateway connection session
      */
     public function disconnectWhatsapp()

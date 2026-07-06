@@ -132,20 +132,42 @@ async function connectToWhatsApp() {
         }
 
         if (connection === 'close') {
-            connectionState = 'disconnected';
+            const statusCode = lastDisconnect?.error?.output?.statusCode;
+            const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+            console.log('Connection closed. Status code:', statusCode, 'Error:', lastDisconnect?.error);
+
             loggedInUser = null;
-            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('Connection closed. Error details:', lastDisconnect?.error);
-            console.log('Reconnecting:', shouldReconnect);
-            
-            if (shouldReconnect) {
-                setTimeout(connectToWhatsApp, 5000);
-            } else {
-                console.log('Logged out of WhatsApp. Clearing session dir...');
-                if (fs.existsSync(SESSION_DIR)) {
-                    fs.rmSync(SESSION_DIR, { recursive: true, force: true });
+            const wasConnected = connectionState === 'connected';
+
+            if (!wasConnected) {
+                console.log('Pairing session closed or expired.');
+                connectionState = 'disconnected';
+                latestQr = null;
+                if (sock) {
+                    try {
+                        sock.ev.removeAllListeners();
+                    } catch (e) {}
+                    sock = null;
                 }
-                setTimeout(connectToWhatsApp, 5000);
+            } else {
+                if (shouldReconnect) {
+                    console.log('Reconnecting to active session in 5 seconds...');
+                    connectionState = 'connecting';
+                    setTimeout(connectToWhatsApp, 5000);
+                } else {
+                    console.log('Logged out of WhatsApp. Clearing session dir...');
+                    connectionState = 'disconnected';
+                    latestQr = null;
+                    if (fs.existsSync(SESSION_DIR)) {
+                        fs.rmSync(SESSION_DIR, { recursive: true, force: true });
+                    }
+                    if (sock) {
+                        try {
+                            sock.ev.removeAllListeners();
+                        } catch (e) {}
+                        sock = null;
+                    }
+                }
             }
         }
     });
@@ -202,15 +224,40 @@ app.get('/status', async (req, res) => {
     });
 });
 
+// Trigger connection and QR generation on demand
+app.post('/connect', authenticate, async (req, res) => {
+    if (connectionState === 'connected') {
+        return res.json({ status: true, message: 'WhatsApp is already connected.' });
+    }
+
+    console.log('Connect request received. Initializing pairing session...');
+    latestQr = null;
+    connectionState = 'connecting';
+
+    if (sock) {
+        try {
+            sock.ev.removeAllListeners();
+            sock.end();
+        } catch (e) {}
+        sock = null;
+    }
+
+    connectToWhatsApp();
+
+    res.json({ status: true, message: 'Pairing session initialized. Please retrieve the QR code.' });
+});
+
 // Disconnect and clear the current session
 app.post('/logout', authenticate, async (req, res) => {
     try {
         if (sock) {
             try {
+                sock.ev.removeAllListeners();
                 await sock.logout();
             } catch (e) {
                 sock.end();
             }
+            sock = null;
         }
 
         // Ensure session directory is cleared
@@ -221,9 +268,6 @@ app.post('/logout', authenticate, async (req, res) => {
         connectionState = 'disconnected';
         latestQr = null;
         loggedInUser = null;
-
-        // Reconnect to initialize a clean socket (which will emit a fresh QR)
-        connectToWhatsApp();
 
         res.json({ status: true, message: 'Session logged out and cleared.' });
     } catch (err) {
@@ -343,5 +387,13 @@ app.post('/broadcast', authenticate, async (req, res) => {
 app.listen(PORT, HOST, async () => {
     console.log(`WhatsApp Gateway Service running on http://${HOST}:${PORT}`);
     await initDb();
-    await connectToWhatsApp();
+    
+    // Only connect automatically if there is an active session creds file
+    const hasSession = fs.existsSync(path.join(SESSION_DIR, 'creds.json'));
+    if (hasSession) {
+        console.log('Session credentials found. Auto-connecting to WhatsApp...');
+        connectToWhatsApp();
+    } else {
+        console.log('No session credentials found. Gateway is idle. Click Connect in UI to pair.');
+    }
 });
