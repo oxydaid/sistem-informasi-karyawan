@@ -128,13 +128,13 @@ async function connectToWhatsApp() {
             connectionState = 'connected';
             latestQr = null;
             loggedInUser = sock.user;
-            console.log('WhatsApp connection is fully active!', sock.user);
+            console.log('WhatsApp connection is fully active for user:', sock.user.id || sock.user.name || sock.user);
         }
 
         if (connection === 'close') {
             const statusCode = lastDisconnect?.error?.output?.statusCode;
             const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
-            console.log('Connection closed. Status code:', statusCode, 'Error:', lastDisconnect?.error);
+            console.log('Connection closed. Status code:', statusCode, 'Reason:', lastDisconnect?.error?.message || lastDisconnect?.error || 'Unknown');
 
             loggedInUser = null;
             const wasConnected = connectionState === 'connected';
