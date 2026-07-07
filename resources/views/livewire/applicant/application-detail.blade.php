@@ -225,6 +225,39 @@
         @endif
 
         @if($applicant->status !== 'accepted' || !$contract || ($contract && $contract->status !== 'uploaded'))
+            <!-- Ringkasan Lamaran Card -->
+            <div class="mt-8 bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-4 max-w-xl mx-auto">
+                <h3 class="text-sm font-bold text-slate-900 border-b border-dashed border-slate-200 pb-2">Ringkasan Lamaran</h3>
+                <div class="space-y-3 text-xs text-slate-700">
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Nama Pelamar</span>
+                        <span class="font-bold text-slate-900">{{ $applicant->name }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Posisi Dilamar</span>
+                        <span class="font-bold text-slate-900">{{ $applicant->metadata['posisi'] ?? 'Staff' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Tanggal Pengajuan</span>
+                        <span class="font-bold text-slate-900">
+                            {{ isset($applicant->metadata['applied_at']) ? \Carbon\Carbon::parse($applicant->metadata['applied_at'])->translatedFormat('d F Y') : $applicant->created_at->translatedFormat('d F Y') }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Status Terkini</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-bold capitalize text-[10px] border
+                            {{ $applicant->status === 'accepted' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : '' }}
+                            {{ $applicant->status === 'rejected' ? 'bg-rose-50 text-rose-700 border-rose-100' : '' }}
+                            {{ $applicant->status === 'interviewing' || $applicant->status === 'interview' ? 'bg-purple-50 text-purple-700 border-purple-100' : '' }}
+                            {{ $applicant->status === 'reviewed' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : '' }}
+                            {{ $applicant->status === 'pending' ? 'bg-blue-50 text-blue-700 border-blue-100' : '' }}
+                        ">
+                            {{ $applicant->status === 'interviewing' ? 'Interview' : $applicant->status }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Status Verifikasi Berkas Card -->
             <div class="mt-8 bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-4 max-w-xl mx-auto">
                 <h3 class="text-sm font-bold text-slate-900 border-b border-dashed border-slate-200 pb-2">Status Verifikasi Berkas</h3>
