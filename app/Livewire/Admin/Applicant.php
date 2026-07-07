@@ -7,6 +7,7 @@ use App\Models\Applicant as ApplicantModel;
 use App\Models\Position;
 use App\Services\OcrService;
 use App\Services\WhatsappGatewayService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -66,6 +67,19 @@ class Applicant extends Component
     public $editKewarganegaraan = 'WNI';
 
     public $editAlamat = '';
+
+    // Interview Scheduling Modal State
+    public $showInterviewModal = false;
+
+    public $interviewApplicantId = null;
+
+    public $interviewDate = '';
+
+    public $interviewTime = '';
+
+    public $interviewLocation = '';
+
+    public $interviewNotes = '';
 
     // File Upload Fields (for Edit/Create in Admin)
     public $fileKtp;
@@ -332,7 +346,7 @@ class Applicant extends Component
             $applicant->contracts()->delete();
             $applicant->delete();
 
-            session()->flash('success', 'Data pelamar berhasil dihapus secara permanen!');
+            $this->dispatch('toast', type: 'success', message: 'Data pelamar berhasil dihapus secara permanen!');
         }
         $this->showDeleteModal = false;
         $this->deletingApplicantId = null;
@@ -356,7 +370,7 @@ class Applicant extends Component
         }
 
         $applicant->update(['status' => $newStatus]);
-        session()->flash('success', "Status pelamar {$applicant->name} berhasil diubah menjadi: {$newStatus}");
+        $this->dispatch('toast', type: 'success', message: "Status pelamar {$applicant->name} berhasil diubah menjadi: {$newStatus}");
 
         if ($this->selectedApplicant && $this->selectedApplicant->id === $id) {
             $this->selectedApplicant = $applicant;
@@ -382,7 +396,7 @@ class Applicant extends Component
 
             if (empty($files)) {
                 $zip->close();
-                session()->flash('error', "Tidak ada berkas yang ditemukan untuk NIK {$nik}.");
+                $this->dispatch('toast', type: 'error', message: "Tidak ada berkas yang ditemukan untuk NIK {$nik}.");
 
                 return;
             }
@@ -396,7 +410,7 @@ class Applicant extends Component
 
             return response()->download($zipPath)->deleteFileAfterSend(true);
         } else {
-            session()->flash('error', 'Gagal membuat file ZIP.');
+            $this->dispatch('toast', type: 'error', message: 'Gagal membuat file ZIP.');
         }
     }
 
@@ -440,6 +454,75 @@ class Applicant extends Component
             Log::error('Failed to send acceptance WhatsApp: '.$e->getMessage());
             $this->dispatch('toast', type: 'error', message: 'Notifikasi Email terkirim, tetapi WhatsApp mengalami kesalahan.');
         }
+    }
+
+    public function openInterviewModal($id)
+    {
+        $applicant = ApplicantModel::findOrFail($id);
+        $this->interviewApplicantId = $id;
+        $this->interviewDate = date('Y-m-d', strtotime('+1 day'));
+        $this->interviewTime = '10:00';
+        $this->interviewLocation = 'Kantor Pusat PT SKYNET';
+        $this->interviewNotes = 'Mohon hadir 15 menit sebelum jadwal dimulai dan mengenakan pakaian rapi.';
+        $this->showInterviewModal = true;
+    }
+
+    public function sendInterviewInvitation()
+    {
+        $this->validate([
+            'interviewDate' => 'required|date',
+            'interviewTime' => 'required',
+            'interviewLocation' => 'required|string|max:255',
+            'interviewNotes' => 'nullable|string|max:500',
+        ], [], [
+            'interviewDate' => 'Tanggal Interview',
+            'interviewTime' => 'Jam Interview',
+            'interviewLocation' => 'Lokasi/Tautan Interview',
+            'interviewNotes' => 'Catatan Tambahan',
+        ]);
+
+        $applicant = ApplicantModel::findOrFail($this->interviewApplicantId);
+
+        // Update status to interviewing
+        $applicant->update(['status' => 'interviewing']);
+        if ($this->selectedApplicant && $this->selectedApplicant->id === $applicant->id) {
+            $this->selectedApplicant = $applicant;
+        }
+
+        // Send WhatsApp
+        try {
+            $waService = new WhatsappGatewayService;
+
+            $formattedDate = Carbon::parse($this->interviewDate)->translatedFormat('l, d F Y');
+
+            $message = "Halo *{$applicant->name}*,\n\n"
+                ."Terima kasih telah melamar di perusahaan kami. Berkas lamaran Anda telah ditinjau dan Anda dinyatakan lolos untuk mengikuti tahap wawancara (interview).\n\n"
+                ."Berikut detail jadwal wawancara Anda:\n"
+                ."• Hari/Tanggal: {$formattedDate}\n"
+                ."• Waktu: {$this->interviewTime} WIB\n"
+                ."• Tempat/Link: {$this->interviewLocation}\n";
+
+            if (! empty($this->interviewNotes)) {
+                $message .= "• Catatan: {$this->interviewNotes}\n";
+            }
+
+            $message .= "\nMohon konfirmasi kehadiran Anda dengan membalas pesan ini.\n\n"
+                ."Terima kasih,\n"
+                .'Tim HRD PT SKYNET';
+
+            $waResponse = $waService->sendMessage($applicant->phone, $message);
+
+            if ($waResponse['status'] ?? false) {
+                $this->dispatch('toast', type: 'success', message: 'Undangan interview berhasil dikirim via WhatsApp ke '.$applicant->name.'!');
+            } else {
+                $this->dispatch('toast', type: 'warning', message: 'Status diubah ke Interview, namun WhatsApp gagal dikirim: '.($waResponse['message'] ?? 'Gateway Offline'));
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send interview WhatsApp: '.$e->getMessage());
+            $this->dispatch('toast', type: 'error', message: 'Terjadi kesalahan sistem saat mengirim undangan WhatsApp.');
+        }
+
+        $this->showInterviewModal = false;
     }
 
     public $isScanningKtp = false;

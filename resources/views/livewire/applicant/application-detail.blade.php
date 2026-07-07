@@ -74,8 +74,60 @@
         @else
             <!-- Error or Info Alerts -->
 
-            @if(!$contract)
-                <!-- No Contract Generated yet -->
+            @if($applicant->status === 'pending')
+                <!-- Pending Status Card -->
+                <div class="bg-white p-12 shadow-xl shadow-slate-200/50 rounded-3xl border border-slate-100 text-center space-y-4 max-w-xl mx-auto border-dashed">
+                    <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                        <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6M9 16h6m-7-8h8a2 2 0 012 2v9a2 2 0 01-2 2H7a2 2 0 01-2-2V10a2 2 0 012-2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Berkas Sedang Ditinjau</h3>
+                    <p class="text-sm text-slate-500">
+                        Terima kasih telah mendaftar. Berkas pendaftaran Anda saat ini sedang dalam proses screening awal oleh tim HRD. Mohon pantau halaman ini dan WhatsApp Anda untuk pemberitahuan selanjutnya.
+                    </p>
+                </div>
+            @elseif($applicant->status === 'reviewed')
+                <!-- Reviewed Status Card -->
+                <div class="bg-white p-12 shadow-xl shadow-slate-200/50 rounded-3xl border border-slate-100 text-center space-y-4 max-w-xl mx-auto border-dashed">
+                    <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                        <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Tinjauan Awal Selesai</h3>
+                    <p class="text-sm text-slate-500">
+                        Berkas lamaran Anda telah ditinjau dan dinyatakan memenuhi syarat administrasi awal. Kami sedang menjadwalkan langkah seleksi berikutnya. Info lebih lanjut akan segera dikirimkan ke nomor WhatsApp Anda.
+                    </p>
+                </div>
+            @elseif($applicant->status === 'interviewing' || $applicant->status === 'interview')
+                <!-- Interview Status Card -->
+                <div class="bg-white p-12 shadow-xl shadow-slate-200/50 rounded-3xl border border-slate-100 text-center space-y-4 max-w-xl mx-auto border-dashed">
+                    <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-50 text-purple-600">
+                        <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Tahap Wawancara (Interview)</h3>
+                    <p class="text-sm text-slate-500">
+                        Status lamaran Anda saat ini berada dalam **Tahap Wawancara (Interview)**. Silakan periksa detail jadwal dan rincian yang kami kirimkan melalui WhatsApp Anda, atau hubungi HRD kami jika ada kendala.
+                    </p>
+                </div>
+            @elseif($applicant->status === 'rejected')
+                <!-- Rejected Status Card -->
+                <div class="bg-white p-12 shadow-xl shadow-slate-200/50 rounded-3xl border border-slate-100 text-center space-y-4 max-w-xl mx-auto border-dashed">
+                    <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+                        <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Lamaran Belum Sesuai</h3>
+                    <p class="text-sm text-slate-500">
+                        Terima kasih atas minat Anda untuk bergabung dengan kami. Setelah melakukan tinjauan mendalam, saat ini profil Anda belum sesuai dengan kebutuhan posisi yang dilamar. Tetap semangat dan semoga sukses di karir Anda selanjutnya!
+                    </p>
+                </div>
+            @elseif(!$contract)
+                <!-- Accepted but Contract not generated yet -->
                 <div class="bg-white p-12 shadow-xl shadow-slate-200/50 rounded-3xl border border-slate-100 text-center space-y-4 max-w-xl mx-auto border-dashed">
                     <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
                         <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

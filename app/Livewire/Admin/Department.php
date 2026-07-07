@@ -47,7 +47,7 @@ class Department extends Component
         ]);
 
         $this->reset('newDeptName');
-        session()->flash('success', 'Divisi berhasil ditambahkan!');
+        $this->dispatch('toast', type: 'success', message: 'Divisi berhasil ditambahkan!');
     }
 
     public function selectDepartment($id)
@@ -71,7 +71,7 @@ class Department extends Component
         ]);
 
         $this->reset(['newPosName', 'newPosSalary']);
-        session()->flash('success', 'Jabatan berhasil ditambahkan!');
+        $this->dispatch('toast', type: 'success', message: 'Jabatan berhasil ditambahkan!');
     }
 
     // Department CRUD (Edit & Delete)
@@ -94,7 +94,7 @@ class Department extends Component
         $dept->update(['name' => $this->editingDeptName]);
 
         $this->reset(['editingDeptId', 'editingDeptName']);
-        session()->flash('success', 'Divisi berhasil diperbarui!');
+        $this->dispatch('toast', type: 'success', message: 'Divisi berhasil diperbarui!');
     }
 
     public function cancelEditDepartment()
@@ -118,9 +118,9 @@ class Department extends Component
                     $this->reset(['selectedDeptId', 'newPosName', 'newPosSalary']);
                 }
 
-                session()->flash('success', 'Divisi berhasil dihapus!');
+                $this->dispatch('toast', type: 'success', message: 'Divisi berhasil dihapus!');
             } catch (QueryException $e) {
-                session()->flash('error', 'Tidak dapat menghapus divisi karena masih ada karyawan yang menempati jabatan di divisi ini.');
+                $this->dispatch('toast', type: 'error', message: 'Tidak dapat menghapus divisi karena masih ada karyawan yang menempati jabatan di divisi ini.');
             }
         }
         $this->reset('confirmingDeptDeleteId');
@@ -152,7 +152,7 @@ class Department extends Component
         ]);
 
         $this->reset(['editingPosId', 'editingPosName', 'editingPosSalary']);
-        session()->flash('success', 'Jabatan berhasil diperbarui!');
+        $this->dispatch('toast', type: 'success', message: 'Jabatan berhasil diperbarui!');
     }
 
     public function cancelEditPosition()
@@ -171,9 +171,9 @@ class Department extends Component
             try {
                 $pos = Position::findOrFail($this->confirmingPosDeleteId);
                 $pos->delete();
-                session()->flash('success', 'Jabatan berhasil dihapus!');
+                $this->dispatch('toast', type: 'success', message: 'Jabatan berhasil dihapus!');
             } catch (QueryException $e) {
-                session()->flash('error', 'Tidak dapat menghapus jabatan karena masih ada karyawan yang menempati jabatan ini.');
+                $this->dispatch('toast', type: 'error', message: 'Tidak dapat menghapus jabatan karena masih ada karyawan yang menempati jabatan ini.');
             }
         }
         $this->reset('confirmingPosDeleteId');

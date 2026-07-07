@@ -120,7 +120,7 @@ class ManageContract extends Component
             return redirect()->route('admin.applicants');
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Gagal membuat kontrak: '.$e->getMessage());
+            $this->dispatch('toast', type: 'error', message: 'Gagal membuat kontrak: '.$e->getMessage());
         } finally {
             $this->isGenerating = false;
         }

@@ -515,7 +515,7 @@ class Employee extends Component
 
             if (empty($files)) {
                 $zip->close();
-                session()->flash('error', "Tidak ada berkas yang ditemukan untuk NIK {$nik}.");
+                $this->dispatch('toast', type: 'error', message: "Tidak ada berkas yang ditemukan untuk NIK {$nik}.");
 
                 return;
             }
@@ -529,7 +529,7 @@ class Employee extends Component
 
             return response()->download($zipPath)->deleteFileAfterSend(true);
         } else {
-            session()->flash('error', 'Gagal membuat file ZIP.');
+            $this->dispatch('toast', type: 'error', message: 'Gagal membuat file ZIP.');
         }
     }
 
@@ -552,10 +552,10 @@ class Employee extends Component
                 $employee->delete();
             }
 
-            session()->flash('success', 'Karyawan berhasil dihapus dari sistem!');
+            $this->dispatch('toast', type: 'success', message: 'Karyawan berhasil dihapus dari sistem!');
             $this->showDeleteModal = false;
         } catch (\Exception $e) {
-            session()->flash('error', 'Gagal menghapus karyawan: '.$e->getMessage());
+            $this->dispatch('toast', type: 'error', message: 'Gagal menghapus karyawan: '.$e->getMessage());
         }
     }
 

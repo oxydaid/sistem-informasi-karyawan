@@ -164,10 +164,10 @@ class Contract extends Component
                 ]);
             }
 
-            session()->flash('success', $this->isEdit ? 'Kontrak kerja berhasil diperbarui!' : 'Kontrak kerja berhasil dibuat!');
+            $this->dispatch('toast', type: 'success', message: $this->isEdit ? 'Kontrak kerja berhasil diperbarui!' : 'Kontrak kerja berhasil dibuat!');
             $this->showModal = false;
         } catch (\Exception $e) {
-            session()->flash('error', 'Gagal menyimpan kontrak: '.$e->getMessage());
+            $this->dispatch('toast', type: 'error', message: 'Gagal menyimpan kontrak: '.$e->getMessage());
         }
     }
 
@@ -185,14 +185,14 @@ class Contract extends Component
             }
         }
 
-        session()->flash('success', 'Status tanda tangan kontrak berhasil diubah!');
+        $this->dispatch('toast', type: 'success', message: 'Status tanda tangan kontrak berhasil diubah!');
     }
 
     public function approveUploadedContract($id)
     {
         $contract = ContractModel::findOrFail($id);
         if ($contract->status !== 'uploaded') {
-            session()->flash('error', 'Kontrak ini tidak dapat disetujui karena statusnya bukan Uploaded.');
+            $this->dispatch('toast', type: 'error', message: 'Kontrak ini tidak dapat disetujui karena statusnya bukan Uploaded.');
 
             return;
         }
@@ -243,9 +243,9 @@ class Contract extends Component
                 $applicant->update(['status' => 'accepted']);
             });
 
-            session()->flash('success', 'Kontrak berhasil disetujui! Akun pengguna dan profil karyawan telah dibuat secara otomatis.');
+            $this->dispatch('toast', type: 'success', message: 'Kontrak berhasil disetujui! Akun pengguna dan profil karyawan telah dibuat secara otomatis.');
         } catch (\Exception $e) {
-            session()->flash('error', 'Gagal menyetujui kontrak: '.$e->getMessage());
+            $this->dispatch('toast', type: 'error', message: 'Gagal menyetujui kontrak: '.$e->getMessage());
         }
     }
 
@@ -266,7 +266,7 @@ class Contract extends Component
             }
 
             $contract->delete();
-            session()->flash('success', 'Kontrak kerja berhasil dihapus!');
+            $this->dispatch('toast', type: 'success', message: 'Kontrak kerja berhasil dihapus!');
         }
 
         $this->confirmingDeletion = false;
@@ -280,7 +280,7 @@ class Contract extends Component
             return Storage::disk('public')->download($contract->contract_file_path);
         }
 
-        session()->flash('error', 'Berkas PDF kontrak tidak ditemukan di penyimpanan.');
+        $this->dispatch('toast', type: 'error', message: 'Berkas PDF kontrak tidak ditemukan di penyimpanan.');
     }
 
     public function render()

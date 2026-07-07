@@ -109,7 +109,7 @@ class CashAdvance extends Component
         ]);
 
         $this->showCreateModal = false;
-        session()->flash('success', 'Kasbon berhasil ditambahkan!');
+        $this->dispatch('toast', type: 'success', message: 'Kasbon berhasil ditambahkan!');
     }
 
     public function openEditModal($id)
@@ -148,7 +148,7 @@ class CashAdvance extends Component
         ]);
 
         $this->showEditModal = false;
-        session()->flash('success', 'Kasbon berhasil diperbarui!');
+        $this->dispatch('toast', type: 'success', message: 'Kasbon berhasil diperbarui!');
     }
 
     public function confirmDelete($id)
@@ -162,7 +162,7 @@ class CashAdvance extends Component
         if ($this->deletingId) {
             $cash = CashAdvanceModel::findOrFail($this->deletingId);
             $cash->delete();
-            session()->flash('success', 'Kasbon berhasil dihapus!');
+            $this->dispatch('toast', type: 'success', message: 'Kasbon berhasil dihapus!');
         }
         $this->showDeleteModal = false;
         $this->deletingId = null;
@@ -172,7 +172,7 @@ class CashAdvance extends Component
     {
         $cash = CashAdvanceModel::findOrFail($id);
         $cash->update(['status' => $newStatus]);
-        session()->flash('success', 'Status kasbon berhasil diperbarui!');
+        $this->dispatch('toast', type: 'success', message: 'Status kasbon berhasil diperbarui!');
     }
 
     public function render()

@@ -22,7 +22,7 @@ class Payroll extends Component
     public function generatePayroll(PayrollService $payrollService)
     {
         $payrollService->calculateBulkMonthlyPayroll($this->monthYear);
-        session()->flash('success', 'Perhitungan gaji bulanan berhasil diproses untuk seluruh staf secara optimal!');
+        $this->dispatch('toast', type: 'success', message: 'Perhitungan gaji bulanan berhasil diproses untuk seluruh staf secara optimal!');
     }
 
     public function approvePayroll($id)
@@ -34,7 +34,7 @@ class Payroll extends Component
             ->where('status', 'approved')
             ->update(['status' => 'settled']);
 
-        session()->flash('success', 'Gaji karyawan telah disetujui dan kasbon terkait telah diselesaikan!');
+        $this->dispatch('toast', type: 'success', message: 'Gaji karyawan telah disetujui dan kasbon terkait telah diselesaikan!');
     }
 
     public function payPayroll($id, PayrollService $payrollService)
@@ -47,7 +47,7 @@ class Payroll extends Component
         // 2. Mark as paid
         $payroll->update(['status' => 'paid']);
 
-        session()->flash('success', 'Status gaji ditandai PAID! Slip gaji PDF telah dibuat secara resmi.');
+        $this->dispatch('toast', type: 'success', message: 'Status gaji ditandai PAID! Slip gaji PDF telah dibuat secara resmi.');
     }
 
     /**

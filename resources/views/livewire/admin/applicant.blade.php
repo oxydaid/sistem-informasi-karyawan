@@ -591,12 +591,10 @@
                                             Reviewed
                                         </button>
                                     @endif
-                                    @if($selectedApplicant->status !== 'interviewing')
-                                        <button type="button" wire:click="updateStatus({{ $selectedApplicant->id }}, 'interviewing')" 
-                                                class="px-2 py-2 bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-bold rounded-xl hover:bg-purple-100 transition">
-                                            Interview
-                                        </button>
-                                    @endif
+                                    <button type="button" wire:click="openInterviewModal({{ $selectedApplicant->id }})" 
+                                            class="px-2 py-2 bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-bold rounded-xl hover:bg-purple-100 transition">
+                                        {{ $selectedApplicant->status === 'interviewing' ? 'Edit/Kirim Ulang Jadwal' : 'Interview' }}
+                                    </button>
                                     @if($selectedApplicant->status !== 'accepted')
                                         <button type="button" wire:click="updateStatus({{ $selectedApplicant->id }}, 'accepted')" 
                                                 class="px-2 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold rounded-xl hover:bg-emerald-100 transition col-span-2">
@@ -758,6 +756,57 @@
                         <button type="button" wire:click="$set('showDeleteModal', false)" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">Batal</button>
                         <button type="button" wire:click="deleteApplicant" class="px-4 py-2 bg-rose-600 text-white text-xs font-bold rounded-xl shadow hover:bg-rose-700 transition">Hapus Permanen</button>
                     </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Interview Scheduling Modal -->
+    @if($showInterviewModal)
+        <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+            <div class="flex min-h-screen items-center justify-center p-4 text-center">
+                <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" wire:click="$set('showInterviewModal', false)"></div>
+                <div class="relative z-10 w-full max-w-lg transform overflow-hidden rounded-3xl bg-white p-6 text-left shadow-2xl transition-all border border-slate-200">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                        <h3 class="text-sm font-bold text-slate-900">Jadwalkan Wawancara & Kirim Undangan WA</h3>
+                        <button type="button" wire:click="$set('showInterviewModal', false)" class="text-slate-400 hover:text-slate-600 transition">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form wire:submit.prevent="sendInterviewInvitation" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Tanggal Wawancara <span class="text-rose-500">*</span></label>
+                                <input wire:model="interviewDate" type="date" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none transition">
+                                @error('interviewDate') <span class="text-[10px] text-rose-600 font-semibold mt-1 block">{{ $message }}</span> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Waktu Wawancara <span class="text-rose-500">*</span></label>
+                                <input wire:model="interviewTime" type="time" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none transition">
+                                @error('interviewTime') <span class="text-[10px] text-rose-600 font-semibold mt-1 block">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Lokasi atau Tautan (Zoom/Meet) <span class="text-rose-500">*</span></label>
+                            <input wire:model="interviewLocation" type="text" placeholder="Contoh: Kantor Utama PT SKYNET, Lantai 3 atau Link Zoom" class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none transition">
+                            @error('interviewLocation') <span class="text-[10px] text-rose-600 font-semibold mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Catatan Tambahan</label>
+                            <textarea wire:model="interviewNotes" rows="3" placeholder="Instruksi pakaian, berkas yang perlu dibawa, dll..." class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none transition"></textarea>
+                            @error('interviewNotes') <span class="text-[10px] text-rose-600 font-semibold mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="flex justify-end space-x-3 border-t border-slate-100 pt-4 mt-6">
+                            <button type="button" wire:click="$set('showInterviewModal', false)" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">Batal</button>
+                            <button type="submit" class="px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl shadow hover:opacity-90 transition">Kirim Undangan WA</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

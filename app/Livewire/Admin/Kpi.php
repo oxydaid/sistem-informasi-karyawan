@@ -115,7 +115,7 @@ class Kpi extends Component
 
         $this->showForm = false;
         $this->reset(['selectedEmployeeId', 'selectedEmployee', 'score', 'bonus', 'deduction', 'remarks']);
-        session()->flash('success', 'Penilaian KPI bulanan berhasil disimpan!');
+        $this->dispatch('toast', type: 'success', message: 'Penilaian KPI bulanan berhasil disimpan!');
     }
 
     public function render()

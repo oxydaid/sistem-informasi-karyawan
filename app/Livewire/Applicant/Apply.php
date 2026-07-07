@@ -245,8 +245,44 @@ class Apply extends Component
             ], $this->ktpMetadata),
         ]);
 
-        $this->successMessage = true;
-        $this->reset();
+        session()->flash('success', 'Pendaftaran berhasil dikirim! Silakan periksa status lamaran Anda di bawah ini.');
+
+        return redirect()->route('applicant.onboarding', ['token' => $this->nik]);
+    }
+
+    public function updatedFileKk()
+    {
+        $this->dispatch('toast', type: 'success', message: 'Berkas Kartu Keluarga (KK) berhasil diunggah.');
+    }
+
+    public function updatedFileIjazah()
+    {
+        $this->dispatch('toast', type: 'success', message: 'Berkas Ijazah terakhir berhasil diunggah.');
+    }
+
+    public function updatedFileSkck()
+    {
+        $this->dispatch('toast', type: 'success', message: 'Berkas SKCK berhasil diunggah.');
+    }
+
+    public function updatedFilePasFoto()
+    {
+        $this->dispatch('toast', type: 'success', message: 'Berkas Pas Foto berhasil diunggah.');
+    }
+
+    public function updatedFileCv()
+    {
+        $this->dispatch('toast', type: 'success', message: 'Berkas CV / Resume berhasil diunggah.');
+    }
+
+    public function updatedFileSim()
+    {
+        $this->dispatch('toast', type: 'success', message: 'Berkas SIM berhasil diunggah.');
+    }
+
+    public function updatedFileSertifikat()
+    {
+        $this->dispatch('toast', type: 'success', message: 'Berkas Sertifikat keahlian berhasil diunggah.');
     }
 
     public function render()

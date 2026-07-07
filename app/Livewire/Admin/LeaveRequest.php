@@ -106,7 +106,7 @@ class LeaveRequest extends Component
         }
 
         $this->showCreateModal = false;
-        session()->flash('success', 'Pengajuan cuti berhasil dibuat!');
+        $this->dispatch('toast', type: 'success', message: 'Pengajuan cuti berhasil dibuat!');
     }
 
     public function openEditModal($id)
@@ -170,7 +170,7 @@ class LeaveRequest extends Component
         }
 
         $this->showEditModal = false;
-        session()->flash('success', 'Pengajuan cuti berhasil diperbarui!');
+        $this->dispatch('toast', type: 'success', message: 'Pengajuan cuti berhasil diperbarui!');
     }
 
     public function confirmDelete($id)
@@ -187,7 +187,7 @@ class LeaveRequest extends Component
                 $this->restoreLeaveQuota($req);
             }
             $req->delete();
-            session()->flash('success', 'Pengajuan cuti berhasil dihapus!');
+            $this->dispatch('toast', type: 'success', message: 'Pengajuan cuti berhasil dihapus!');
         }
         $this->showDeleteModal = false;
         $this->deletingLeaveId = null;
@@ -225,11 +225,11 @@ class LeaveRequest extends Component
 
         if ($user->role === 'manager') {
             $req->update(['status' => 'approved_manager']);
-            session()->flash('success', 'Pengajuan cuti disetujui oleh Manager! Menunggu persetujuan akhir HRD.');
+            $this->dispatch('toast', type: 'success', message: 'Pengajuan cuti disetujui oleh Manager! Menunggu persetujuan akhir HRD.');
         } elseif (in_array($user->role, ['hrd', 'super_admin'])) {
             $this->deductLeaveQuota($req);
             $req->update(['status' => 'approved_hrd']);
-            session()->flash('success', 'Pengajuan cuti berhasil disetujui akhir oleh HRD! Kuota cuti karyawan telah dipotong.');
+            $this->dispatch('toast', type: 'success', message: 'Pengajuan cuti berhasil disetujui akhir oleh HRD! Kuota cuti karyawan telah dipotong.');
         }
     }
 
@@ -237,7 +237,7 @@ class LeaveRequest extends Component
     {
         $req = LeaveModel::findOrFail($id);
         $req->update(['status' => 'rejected']);
-        session()->flash('success', 'Pengajuan cuti telah ditolak.');
+        $this->dispatch('toast', type: 'success', message: 'Pengajuan cuti telah ditolak.');
     }
 
     public function render()
