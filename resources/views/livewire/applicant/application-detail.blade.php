@@ -221,7 +221,104 @@
                         </div>
                     </div>
                 </div>
-            @endif
+        @if($applicant->status !== 'accepted' || !$contract || ($contract && $contract->status !== 'uploaded'))
+            <!-- Status Verifikasi Berkas Card -->
+            <div class="mt-8 bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-4 max-w-xl mx-auto">
+                <h3 class="text-sm font-bold text-slate-900 border-b border-dashed border-slate-200 pb-2">Status Verifikasi Berkas</h3>
+                
+                <div class="space-y-3">
+                    @foreach($applicant->documents as $key => $path)
+                        @if($key === 'pendukung' || is_array($path))
+                            @continue
+                        @endif
+                        @php
+                            $isVerified = $applicant->metadata['verified_docs'][$key] ?? false;
+                            $label = match($key) {
+                                'ktp' => 'KTP',
+                                'kk' => 'Kartu Keluarga (KK)',
+                                'ijazah' => 'Ijazah Terakhir',
+                                'skck' => 'SKCK',
+                                'pas_foto' => 'Pas Foto Resmi',
+                                'cv' => 'CV / Resume',
+                                'sim' => 'SIM',
+                                'sertifikat' => 'Sertifikat Keahlian',
+                                default => strtoupper($key)
+                            };
+                        @endphp
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200/50 gap-2.5">
+                            <div class="flex items-center gap-3">
+                                @if($isVerified)
+                                    <span class="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </span>
+                                @else
+                                    <span class="flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                    </span>
+                                @endif
+                                <span class="text-xs font-bold text-slate-700">{{ $label }}</span>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full capitalize {{ $isVerified ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-amber-50 text-amber-700 border border-amber-100' }}">
+                                    {{ $isVerified ? 'Lolos Verifikasi' : 'Perlu Diperbaiki / Belum Verifikasi' }}
+                                </span>
+                                
+                                @if(!$isVerified)
+                                    <label class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-700 rounded-xl cursor-pointer transition select-none">
+                                        Unggah Ulang
+                                        <input type="file" wire:model="fileReplacements.{{ $key }}" class="hidden">
+                                    </label>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+
+                    @if(isset($applicant->documents['pendukung']) && is_array($applicant->documents['pendukung']))
+                        @foreach($applicant->documents['pendukung'] as $index => $path)
+                            @php
+                                $key = 'pendukung_' . ($index + 1);
+                                $isVerified = $applicant->metadata['verified_docs'][$key] ?? false;
+                            @endphp
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200/50 gap-2.5">
+                                <div class="flex items-center gap-3">
+                                    @if($isVerified)
+                                        <span class="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                                            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </span>
+                                    @else
+                                        <span class="flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                                            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                        </span>
+                                    @endif
+                                    <span class="text-xs font-bold text-slate-700">Berkas Pendukung {{ $index + 1 }}</span>
+                                </div>
+                                
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] font-bold px-2.5 py-1 rounded-full capitalize {{ $isVerified ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-amber-50 text-amber-700 border border-amber-100' }}">
+                                        {{ $isVerified ? 'Lolos Verifikasi' : 'Perlu Diperbaiki / Belum Verifikasi' }}
+                                    </span>
+                                    
+                                    @if(!$isVerified)
+                                        <label class="px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-700 rounded-xl cursor-pointer transition select-none">
+                                            Unggah Ulang
+                                            <input type="file" wire:model="fileReplacements.pendukung_{{ $index + 1 }}" class="hidden">
+                                        </label>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
+            </div>
         @endif
     </div>
 </div>

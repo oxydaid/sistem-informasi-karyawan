@@ -20,6 +20,51 @@ class ApplicationDetail extends Component
     // File upload
     public $fileSignedContract;
 
+    public $fileReplacements = [];
+
+    public function updatedFileReplacements($value, $key)
+    {
+        // Extract array index
+        $parts = explode('.', $key);
+        $docKey = end($parts);
+
+        $this->validate([
+            "fileReplacements.{$docKey}" => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+        ], [], [
+            "fileReplacements.{$docKey}" => 'Berkas Perbaikan',
+        ]);
+
+        try {
+            $file = $this->fileReplacements[$docKey];
+
+            // Clean/rename replacement file
+            $filename = $docKey.'.'.$file->getClientOriginalExtension();
+            $path = $file->storeAs("berkas/{$this->applicant->nik}", $filename, 'public');
+
+            // Update documents array
+            $docs = $this->applicant->documents ?? [];
+            $docs[$docKey] = $path;
+
+            // Reset verification status
+            $metadata = $this->applicant->metadata ?? [];
+            $verifiedDocs = $metadata['verified_docs'] ?? [];
+            $verifiedDocs[$docKey] = false;
+            $metadata['verified_docs'] = $verifiedDocs;
+
+            $this->applicant->update([
+                'documents' => $docs,
+                'metadata' => $metadata,
+            ]);
+
+            $this->applicant->refresh();
+
+            $this->dispatch('toast', type: 'success', message: 'Berkas perbaikan berhasil diunggah! Menunggu verifikasi ulang oleh HRD.');
+            $this->reset('fileReplacements');
+        } catch (\Exception $e) {
+            $this->dispatch('toast', type: 'error', message: 'Gagal mengunggah berkas perbaikan: '.$e->getMessage());
+        }
+    }
+
     public function mount($token)
     {
         $this->token = $token;
