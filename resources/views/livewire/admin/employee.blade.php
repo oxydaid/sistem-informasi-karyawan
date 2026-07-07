@@ -177,9 +177,13 @@
                         <tr class="hover:bg-slate-50/50 transition">
                             <td class="whitespace-nowrap px-6 py-4">
                                 <div class="flex items-center">
-                                    <div class="h-10 w-10 flex-shrink-0 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 border border-slate-200 text-xs">
-                                        {{ $initials }}
-                                    </div>
+                                    @if(!empty($emp->documents['pas_foto']) && \Storage::disk('public')->exists($emp->documents['pas_foto']))
+                                        <img class="h-10 w-10 flex-shrink-0 rounded-full object-cover border border-slate-200" src="{{ asset('storage/' . $emp->documents['pas_foto']) }}" alt="">
+                                    @else
+                                        <div class="h-10 w-10 flex-shrink-0 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 border border-slate-200 text-xs">
+                                            {{ $initials }}
+                                        </div>
+                                    @endif
                                     <div class="ml-4">
                                         <div class="font-bold text-slate-900 text-sm">{{ $emp->user->name ?? 'Tidak Ada User' }}</div>
                                         <div class="text-xs text-slate-400 mt-0.5">{{ $emp->user->email ?? '-' }}</div>

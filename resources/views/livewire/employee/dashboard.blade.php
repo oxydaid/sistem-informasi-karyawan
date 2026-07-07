@@ -4,8 +4,21 @@
     <!-- Welcome Card -->
     <div class="bg-gradient-to-r from-primary to-primary/80 rounded-3xl p-6 md:p-8 text-white shadow-xl shadow-sky-500/10 flex flex-col md:flex-row items-center justify-between gap-6">
         <div class="flex items-center gap-4">
-            <div class="h-16 w-16 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center font-black text-2xl">
-                {{ substr(auth()->user()->name, 0, 2) }}
+            <div class="relative group">
+                @if(!empty($employee->documents['pas_foto']) && \Storage::disk('public')->exists($employee->documents['pas_foto']))
+                    <img class="h-16 w-16 rounded-full object-cover border border-white/30 shadow-inner group-hover:opacity-85 transition cursor-pointer" src="{{ asset('storage/' . $employee->documents['pas_foto']) }}" alt="">
+                @else
+                    <div class="h-16 w-16 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center font-black text-2xl group-hover:opacity-85 transition cursor-pointer">
+                        {{ substr(auth()->user()->name, 0, 2) }}
+                    </div>
+                @endif
+                <label class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition cursor-pointer">
+                    <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <input type="file" wire:model="filePasFoto" class="hidden">
+                </label>
             </div>
             <div>
                 <h2 class="text-2xl font-black">Selamat Datang, {{ auth()->user()->name }}!</h2>

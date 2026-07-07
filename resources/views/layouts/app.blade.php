@@ -55,10 +55,14 @@
                             <!-- Quick Notifications or App Settings info -->
                             @auth
                             <div class="relative" x-data="{ open: false }">
-                                <button type="button" @click="open = !open" class="flex max-w-xs items-center rounded-xl bg-slate-50 p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
-                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                                    </svg>
+                                <button type="button" @click="open = !open" class="flex max-w-xs items-center rounded-xl bg-slate-50 p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                                    @if(auth()->user()->employee && !empty(auth()->user()->employee->documents['pas_foto']) && \Storage::disk('public')->exists(auth()->user()->employee->documents['pas_foto']))
+                                        <img class="h-7 w-7 rounded-full object-cover border border-slate-200" src="{{ asset('storage/' . auth()->user()->employee->documents['pas_foto']) }}" alt="">
+                                    @else
+                                        <div class="h-7 w-7 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 border border-slate-200 text-xs">
+                                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                        </div>
+                                    @endif
                                     <span class="hidden md:block ml-2 text-sm font-medium text-slate-700">{{ auth()->user()->name }}</span>
                                     <svg class="hidden md:block ml-1 h-5 w-5 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />

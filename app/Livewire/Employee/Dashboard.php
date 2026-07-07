@@ -8,9 +8,38 @@ use App\Models\KpiEvaluation;
 use App\Models\LeaveRequest;
 use App\Models\Payroll;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class Dashboard extends Component
 {
+    use WithFileUploads;
+
+    public $filePasFoto;
+
+    public function updatedFilePasFoto()
+    {
+        $this->validate([
+            'filePasFoto' => 'required|image|max:2048',
+        ], [
+            'filePasFoto.image' => 'Pas foto harus berupa gambar (jpg, jpeg, png).',
+            'filePasFoto.max' => 'Ukuran pas foto maksimal 2MB.',
+        ]);
+
+        $user = auth()->user();
+        $employee = Employee::where('user_id', $user->id)->firstOrFail();
+
+        // Store new pas foto
+        $filename = 'pas_foto.'.$this->filePasFoto->getClientOriginalExtension();
+        $path = $this->filePasFoto->storeAs("berkas/{$employee->nik}", $filename, 'public');
+
+        // Update documents array
+        $docs = $employee->documents ?? [];
+        $docs['pas_foto'] = $path;
+        $employee->update(['documents' => $docs]);
+
+        $this->dispatch('toast', type: 'success', message: 'Pas foto profil Anda berhasil diperbarui!');
+    }
+
     public function render()
     {
         $user = auth()->user();
