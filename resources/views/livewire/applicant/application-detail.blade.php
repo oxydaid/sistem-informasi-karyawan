@@ -221,6 +221,9 @@
                         </div>
                     </div>
                 </div>
+            @endif
+        @endif
+
         @if($applicant->status !== 'accepted' || !$contract || ($contract && $contract->status !== 'uploaded'))
             <!-- Status Verifikasi Berkas Card -->
             <div class="mt-8 bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-4 max-w-xl mx-auto">
