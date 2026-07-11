@@ -256,7 +256,7 @@
                  });
              }
          }"
-         x-init="initCharts()">
+         x-init="$nextTick(() => { initCharts(); })">
         
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4 gap-4">
             <div>
