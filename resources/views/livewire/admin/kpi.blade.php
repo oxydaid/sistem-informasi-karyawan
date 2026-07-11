@@ -3,7 +3,7 @@
 
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
-            <p class="mt-2 text-sm text-slate-500">Nilai kinerja karyawan Anda secara bulanan. Nilai ini akan secara langsung memengaruhi bonus dan potongan pada sistem penggajian (payroll).</p>
+            <p class="mt-2 text-sm text-slate-500">Nilai kinerja karyawan Anda secara bulanan berdasarkan 4 dimensi utama: Kehadiran, Keahlian, Keaktifan, dan Kedisiplinan.</p>
         </div>
     </div>
 
@@ -92,23 +92,23 @@
                                         @if(isset($evaluations[$emp->id]))
                                             <div class="flex items-center gap-2">
                                                 <span class="inline-flex items-center justify-center h-8 px-3 rounded-xl text-xs font-bold bg-sky-50 text-sky-700">
-                                                    Skor: {{ $evaluations[$emp->id]->score }}
+                                                    Skor: {{ number_format($evaluations[$emp->id]->score / 20, 1) }} / 5
                                                 </span>
-                                                @if($evaluations[$emp->id]->bonus_adjustment > 0)
-                                                    <span class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded-md">+Bonus</span>
-                                                @endif
-                                                @if($evaluations[$emp->id]->deduction_adjustment > 0)
-                                                    <span class="text-[10px] text-rose-600 font-bold bg-rose-50 px-1.5 py-0.5 rounded-md">-Potong</span>
-                                                @endif
                                             </div>
                                         @else
                                             <span class="text-xs text-slate-400 font-medium">Belum dinilai</span>
                                         @endif
                                     </td>
-                                    <td class="whitespace-nowrap px-6 py-4 text-right">
+                                    <td class="whitespace-nowrap px-6 py-4 text-right space-x-1">
+                                        @if(isset($evaluations[$emp->id]))
+                                            <button type="button" wire:click="viewDetail({{ $emp->id }})" 
+                                                    class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition">
+                                                Detail Chart
+                                            </button>
+                                        @endif
                                         <button type="button" wire:click="selectEmployee({{ $emp->id }})" 
-                                                class="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-primary shadow-sm hover:bg-slate-50 transition">
-                                            {{ isset($evaluations[$emp->id]) ? 'Edit Nilai' : 'Beri Nilai' }}
+                                                class="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-primary shadow-sm hover:bg-slate-50 transition">
+                                            {{ isset($evaluations[$emp->id]) ? 'Edit' : 'Beri Nilai' }}
                                         </button>
                                     </td>
                                 </tr>
@@ -140,38 +140,41 @@
                         <p class="text-xs text-slate-400">Karyawan: {{ $selectedEmployee->user->name }} | Periode: {{ $monthYear }}</p>
                     </div>
 
-                    <form wire:submit.prevent="saveKpi" class="space-y-4">
-                        <!-- Score -->
-                        <div>
-                            <label for="score" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Skor KPI (1 - 100)</label>
-                            <input wire:model="score" id="score" type="number" min="1" max="100" placeholder="Misal: 85" 
-                                   class="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-slate-950 placeholder-slate-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition text-sm">
-                            @error('score') <span class="text-xs text-rose-600 font-semibold mt-1 block">{{ $message }}</span> @enderror
-                        </div>
+                    <form wire:submit.prevent="saveKpi" class="space-y-6">
+                        @php
+                            $metrics = [
+                                'kehadiran' => 'Kehadiran (Skala 1-5)',
+                                'keahlian' => 'Keahlian (Skala 1-5)',
+                                'keaktifan' => 'Keaktifan (Skala 1-5)',
+                                'kedisiplinan' => 'Kedisiplinan (Skala 1-5)'
+                            ];
+                        @endphp
 
-                        <!-- Bonus Adjustment -->
-                        <div>
-                            <label for="bonus" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Bonus Insentif Tambahan (Rp)</label>
-                            <input wire:model="bonus" id="bonus" type="number" placeholder="Misal: 500000" 
-                                   class="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-slate-950 placeholder-slate-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition text-sm">
-                            @error('bonus') <span class="text-xs text-rose-600 font-semibold mt-1 block">{{ $message }}</span> @enderror
-                        </div>
+                        @foreach($metrics as $key => $label)
+                            <div class="space-y-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200/40">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">{{ $label }} <span class="text-rose-500">*</span></label>
+                                
+                                <!-- Rating Cards -->
+                                <div class="flex gap-2">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <label class="flex-1 text-center cursor-pointer select-none">
+                                            <input type="radio" wire:model="{{ $key }}" value="{{ $i }}" class="sr-only peer">
+                                            <div class="py-2 rounded-xl border border-slate-200 bg-white peer-checked:border-primary peer-checked:bg-sky-50 text-xs font-extrabold text-slate-700 peer-checked:text-primary hover:bg-slate-50/50 transition">
+                                                {{ $i }}
+                                            </div>
+                                        </label>
+                                    @endfor
+                                </div>
+                                @error($key) <span class="text-[10px] text-rose-600 font-semibold block mt-0.5">{{ $message }}</span> @enderror
 
-                        <!-- Deduction Adjustment -->
-                        <div>
-                            <label for="deduction" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Potongan Performa Buruk (Rp)</label>
-                            <input wire:model="deduction" id="deduction" type="number" placeholder="Misal: 100000" 
-                                   class="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-slate-950 placeholder-slate-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition text-sm">
-                            @error('deduction') <span class="text-xs text-rose-600 font-semibold mt-1 block">{{ $message }}</span> @enderror
-                        </div>
-
-                        <!-- Remarks -->
-                        <div>
-                            <label for="remarks" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Catatan Performa / Feedback</label>
-                            <textarea wire:model="remarks" id="remarks" rows="3" placeholder="Masukkan ulasan performa kerja staf selama bulan ini..." 
-                                      class="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-4 py-2.5 text-slate-950 placeholder-slate-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition text-sm"></textarea>
-                            @error('remarks') <span class="text-xs text-rose-600 font-semibold mt-1 block">{{ $message }}</span> @enderror
-                        </div>
+                                <!-- Note -->
+                                <div class="mt-2">
+                                    <input type="text" wire:model="{{ $key }}_notes" placeholder="Tulis catatan penunjang untuk nilai ini..."
+                                           class="block w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition font-semibold">
+                                    @error($key.'_notes') <span class="text-[10px] text-rose-600 font-semibold block mt-0.5">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        @endforeach
 
                         <!-- Actions -->
                         <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
@@ -189,9 +192,126 @@
                     <svg class="h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
-                    <span class="mt-3 text-sm font-medium text-slate-400 text-center">Pilih salah satu karyawan di sebelah kiri untuk memberikan skor KPI bulanan.</span>
+                    <span class="mt-3 text-sm font-medium text-slate-400 text-center">Pilih salah satu karyawan di sebelah kiri untuk memberikan penilaian KPI bulanan.</span>
                 </div>
             @endif
         </div>
     </div>
+
+    <!-- Detail KPI Modal with Spider Chart -->
+    @if($showDetailModal && $detailEmployee)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+             x-data x-init="
+                $wire.on('renderRadarChart', (event) => {
+                    const ctx = document.getElementById('radarChartAdmin').getContext('2d');
+                    if (window.myRadarChart) {
+                        window.myRadarChart.destroy();
+                    }
+                    window.myRadarChart = new Chart(ctx, {
+                        type: 'radar',
+                        data: {
+                            labels: ['Kehadiran', 'Keahlian', 'Keaktifan', 'Kedisiplinan'],
+                            datasets: [
+                                {
+                                    label: 'Bulan Ini (' + $wire.monthYear + ')',
+                                    data: event.current,
+                                    fill: true,
+                                    backgroundColor: 'rgba(14, 165, 233, 0.2)',
+                                    borderColor: '#0ea5e9',
+                                    pointBackgroundColor: '#0ea5e9',
+                                    pointBorderColor: '#fff',
+                                    pointHoverBackgroundColor: '#fff',
+                                    pointHoverBorderColor: '#0ea5e9'
+                                },
+                                {
+                                    label: 'Bulan Sebelumnya',
+                                    data: event.previous,
+                                    fill: true,
+                                    backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                                    borderColor: '#94a3b8',
+                                    pointBackgroundColor: '#94a3b8',
+                                    pointBorderColor: '#fff',
+                                    pointHoverBackgroundColor: '#fff',
+                                    pointHoverBorderColor: '#94a3b8'
+                                }
+                            ]
+                        },
+                        options: {
+                            scales: {
+                                r: {
+                                    angleLines: { display: true },
+                                    suggestedMin: 0,
+                                    suggestedMax: 5,
+                                    ticks: { stepSize: 1 }
+                                }
+                            }
+                        }
+                    });
+                });
+             ">
+            <!-- Include Chart.js CDN dynamically -->
+            <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 md:p-8 space-y-6">
+                <div class="flex items-center justify-between border-b border-dashed border-slate-200 pb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Analisis Kinerja KPI Karyawan</h3>
+                        <p class="text-xs text-slate-400">Karyawan: {{ $detailEmployee->user->name }} | ID: {{ $detailEmployee->employee_id_number }}</p>
+                    </div>
+                    <button type="button" wire:click="$set('showDetailModal', false)" class="text-slate-400 hover:text-slate-600 transition">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Left: Spider Chart -->
+                    <div class="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-200/50">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Statistik Jaring (Spider Chart)</h4>
+                        <div class="w-full max-w-xs aspect-square">
+                            <canvas id="radarChartAdmin"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Right: Key Metrics & Comments -->
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 pb-1.5">Metrik Detail & Catatan</h4>
+
+                        @php
+                            $keysList = [
+                                'kehadiran' => ['label' => 'Kehadiran', 'color' => 'sky'],
+                                'keahlian' => ['label' => 'Keahlian', 'color' => 'emerald'],
+                                'keaktifan' => ['label' => 'Keaktifan', 'color' => 'purple'],
+                                'kedisiplinan' => ['label' => 'Kedisiplinan', 'color' => 'amber']
+                            ];
+                        @endphp
+
+                        @foreach($keysList as $k => $info)
+                            @php
+                                $val = $detailEvaluation ? $detailEvaluation->$k : 0;
+                                $notes = $detailEvaluation ? $detailEvaluation->{$k.'_notes'} : '';
+                            @endphp
+                            <div class="p-3 bg-slate-50 border border-slate-200/40 rounded-xl space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-slate-800">{{ $info['label'] }}</span>
+                                    <span class="text-xs font-extrabold text-primary">{{ $val }} / 5</span>
+                                </div>
+                                <div class="text-[11px] text-slate-500 leading-relaxed italic bg-white p-2 rounded-lg border border-slate-100">
+                                    {{ $notes ?: 'Tidak ada catatan khusus.' }}
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-4 border-t border-slate-100">
+                    <button type="button" wire:click="$set('showDetailModal', false)"
+                            class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200/80 text-xs font-semibold text-slate-700 rounded-xl transition">
+                        Tutup Detail
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

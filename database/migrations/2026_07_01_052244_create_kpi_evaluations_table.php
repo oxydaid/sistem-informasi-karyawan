@@ -16,10 +16,20 @@ return new class extends Migration
             $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
             $table->foreignId('evaluator_id')->constrained('users'); // Atasan yang menilai
             $table->string('month_year', 7); // Format: MM-YYYY
-            $table->integer('score')->comment('Skala 1-100');
-            $table->decimal('bonus_adjustment', 15, 2)->default(0); // Nominal bonus
-            $table->decimal('deduction_adjustment', 15, 2)->default(0); // Nominal pemotongan jika performa buruk
-            $table->text('remarks')->nullable();
+            $table->integer('score')->comment('Skor Rerata (skala 20-100)');
+
+            $table->integer('kehadiran')->default(0);
+            $table->text('kehadiran_notes')->nullable();
+
+            $table->integer('keahlian')->default(3);
+            $table->text('keahlian_notes')->nullable();
+
+            $table->integer('keaktifan')->default(0);
+            $table->text('keaktifan_notes')->nullable();
+
+            $table->integer('kedisiplinan')->default(0);
+            $table->text('kedisiplinan_notes')->nullable();
+
             $table->timestamps();
         });
     }

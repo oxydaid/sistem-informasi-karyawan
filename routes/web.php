@@ -17,6 +17,7 @@ use App\Livewire\Applicant\Apply;
 use App\Livewire\Auth\Login;
 use App\Livewire\Employee\ContractView;
 use App\Livewire\Employee\Dashboard;
+use App\Livewire\Employee\KpiView;
 use App\Livewire\Employee\PayrollView;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -79,5 +80,6 @@ Route::middleware('auth')->group(function () {
         Route::livewire('/cuti', App\Livewire\Employee\LeaveRequest::class)->name('employee.leaves');
         Route::livewire('/penggajian', PayrollView::class)->name('employee.payrolls');
         Route::livewire('/kasbon', App\Livewire\Employee\CashAdvance::class)->name('employee.cash-advances');
+        Route::livewire('/kpi', KpiView::class)->name('employee.kpi');
     });
 });

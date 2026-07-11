@@ -121,14 +121,16 @@ test('it calculates bulk payroll correctly for all employees', function () {
         'leave_quota' => 12,
     ]);
 
-    // KPI adjustment for emp1
+    // KPI evaluation for emp1
     KpiEvaluation::create([
         'employee_id' => $emp1->id,
         'evaluator_id' => $user1->id, // self/test evaluator
         'month_year' => now()->format('m-Y'),
-        'score' => 85,
-        'bonus_adjustment' => 200000,
-        'deduction_adjustment' => 0,
+        'score' => 80,
+        'kehadiran' => 4,
+        'keaktifan' => 4,
+        'kedisiplinan' => 4,
+        'keahlian' => 4,
     ]);
 
     // Unpaid leave for emp2
