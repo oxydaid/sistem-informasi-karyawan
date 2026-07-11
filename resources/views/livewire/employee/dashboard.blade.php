@@ -155,6 +155,10 @@
     </div>
 
     <!-- KPI Analytics Section for Employee -->
+    @php
+        $currKpiData = $currentKpi ? [$currentKpi->kehadiran, $currentKpi->keahlian, $currentKpi->keaktifan, $currentKpi->kedisiplinan] : [0,0,0,0];
+        $prevKpiData = $prevKpi ? [$prevKpi->kehadiran, $prevKpi->keahlian, $prevKpi->keaktifan, $prevKpi->kedisiplinan] : [0,0,0,0];
+    @endphp
     <div class="mt-8 bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-6"
          x-data="{
              initCharts() {
@@ -167,7 +171,7 @@
                          datasets: [
                              {
                                  label: 'Bulan Ini (' + '{{ now()->format('m-Y') }}' + ')',
-                                 data: @json($currentKpi ? [$currentKpi->kehadiran, $currentKpi->keahlian, $currentKpi->keaktifan, $currentKpi->kedisiplinan] : [0,0,0,0]),
+                                 data: @json($currKpiData),
                                  fill: true,
                                  backgroundColor: 'rgba(14, 165, 233, 0.2)',
                                  borderColor: '#0ea5e9',
@@ -175,7 +179,7 @@
                              },
                              {
                                  label: 'Bulan Sebelumnya',
-                                 data: @json($prevKpi ? [$prevKpi->kehadiran, $prevKpi->keahlian, $prevKpi->keaktifan, $prevKpi->kedisiplinan] : [0,0,0,0]),
+                                 data: @json($prevKpiData),
                                  fill: true,
                                  backgroundColor: 'rgba(148, 163, 184, 0.2)',
                                  borderColor: '#94a3b8',
