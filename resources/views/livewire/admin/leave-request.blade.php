@@ -67,7 +67,7 @@
                         <tr class="hover:bg-slate-50/50 transition">
                             <td class="whitespace-nowrap px-6 py-4">
                                 <div class="font-semibold text-slate-900">{{ $req->employee->user->name }}</div>
-                                <div class="text-xs text-slate-400">Kuota Cuti: {{ $req->employee->leave_quota }} Hari</div>
+                                <div class="text-xs text-slate-400">ID: {{ $req->employee->employee_id_number }}</div>
                             </td>
                             <td class="whitespace-nowrap px-6 py-4">
                                 <div class="font-semibold text-slate-900">{{ $req->start_date->format('d M Y') }} s/d {{ $req->end_date->format('d M Y') }}</div>
@@ -204,7 +204,7 @@
                                                     @click="open = false"
                                                     class="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-800 text-sm font-semibold transition flex justify-between items-center">
                                                 <span>{{ $emp->user->name }}</span>
-                                                <span class="text-xs text-slate-400 font-mono">Sisa Cuti: {{ $emp->leave_quota }} Hari</span>
+                                                <span class="text-xs text-slate-400 font-mono">{{ $emp->employee_id_number }}</span>
                                             </button>
                                         </li>
                                     @empty

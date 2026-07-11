@@ -195,26 +195,13 @@ class LeaveRequest extends Component
 
     private function deductLeaveQuota(LeaveModel $req)
     {
-        $employee = $req->employee;
         $days = $req->days_requested;
-        $remainingQuota = $employee->leave_quota;
-
-        $unpaidDays = 0;
-        if ($days > $remainingQuota) {
-            $unpaidDays = $days - $remainingQuota;
-            $newQuota = 0;
-        } else {
-            $newQuota = $remainingQuota - $days;
-        }
-
-        $employee->update(['leave_quota' => $newQuota]);
-        $req->update(['unpaid_days' => $unpaidDays]);
+        // Since leave quota is not needed, all approved leave days are unpaid
+        $req->update(['unpaid_days' => $days]);
     }
 
     private function restoreLeaveQuota(LeaveModel $req)
     {
-        $employee = $req->employee;
-        $employee->increment('leave_quota', $req->days_requested - $req->unpaid_days);
         $req->update(['unpaid_days' => 0]);
     }
 

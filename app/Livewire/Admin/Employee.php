@@ -198,7 +198,7 @@ class Employee extends Component
             'address' => 'nullable|string',
             'employment_status' => 'required|in:magang,pkl,kontrak,tetap,freelance',
             'join_date' => 'required|date',
-            'leave_quota' => 'required|integer|min:0',
+            'leave_quota' => 'nullable|integer|min:0',
             'base_salary' => 'nullable|numeric|min:0',
 
             // File upload rules

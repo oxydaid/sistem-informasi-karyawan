@@ -69,14 +69,14 @@ test('it processes leave request quota deductions and unpaid days calculation co
     Livewire::test(AdminLeaveRequestComponent::class)
         ->call('approve', $req1->id);
 
-    // Verify quota is deducted and unpaid_days remains 0
+    // Verify quota is untouched and unpaid_days is equal to days requested (3)
     $employee->refresh();
     $req1->refresh();
-    expect($employee->leave_quota)->toBe(9)
+    expect($employee->leave_quota)->toBe(12)
         ->and($req1->status)->toBe('approved_hrd')
-        ->and($req1->unpaid_days)->toBe(0);
+        ->and($req1->unpaid_days)->toBe(3);
 
-    // 4. Submit an excess leave request (10 days) via Admin component manually
+    // 4. Submit a leave request (10 days) via Admin component manually
     Livewire::test(AdminLeaveRequestComponent::class)
         ->set('employeeId', $employee->id)
         ->set('startDate', now()->addMonth()->format('Y-m-01'))
@@ -86,19 +86,18 @@ test('it processes leave request quota deductions and unpaid days calculation co
         ->call('createLeaveRequest')
         ->assertHasNoErrors();
 
-    // Verify direct quota deduction and unpaid days calculation
+    // Verify quota remains untouched
     $employee->refresh();
-    expect($employee->leave_quota)->toBe(0); // Quota was 9, requested 10, so new quota is 0
+    expect($employee->leave_quota)->toBe(12);
 
     $req2 = LeaveRequest::orderBy('id', 'desc')->first();
-    expect($req2->unpaid_days)->toBe(1); // 10 requested - 9 quota = 1 unpaid day
+    expect($req2->unpaid_days)->toBe(10); // All 10 days are unpaid
 
-    // 5. Delete the excess leave request, verifying quota is restored
+    // 5. Delete the leave request, verifying quota is untouched
     Livewire::test(AdminLeaveRequestComponent::class)
         ->call('confirmDelete', $req2->id)
         ->call('deleteLeaveRequest');
 
     $employee->refresh();
-    // Quota should restore from 0 back to 9 (restores days_requested - unpaid_days = 10 - 1 = 9)
-    expect($employee->leave_quota)->toBe(9);
+    expect($employee->leave_quota)->toBe(12);
 });

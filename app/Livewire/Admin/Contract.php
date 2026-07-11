@@ -6,6 +6,7 @@ use App\Models\Applicant;
 use App\Models\Contract as ContractModel;
 use App\Models\Employee;
 use App\Models\Position;
+use App\Models\User;
 use App\Services\ContractService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -175,17 +176,18 @@ class Contract extends Component
     {
         $contract = ContractModel::findOrFail($id);
         $newStatus = ! $contract->is_signed;
-        $contract->update(['is_signed' => $newStatus]);
 
-        // Auto link/update employee if exists
         if ($newStatus) {
-            $employee = Employee::where('nik', $contract->applicant->nik)->first();
-            if ($employee) {
-                $contract->update(['employee_id' => $employee->id]);
+            try {
+                $this->createEmployeeFromContract($contract);
+                $this->dispatch('toast', type: 'success', message: 'Kontrak berhasil ditandatangani manual & akun karyawan telah dibuat!');
+            } catch (\Exception $e) {
+                $this->dispatch('toast', type: 'error', message: 'Gagal membuat akun karyawan: '.$e->getMessage());
             }
+        } else {
+            $contract->update(['is_signed' => false]);
+            $this->dispatch('toast', type: 'success', message: 'Status tanda tangan kontrak berhasil diubah!');
         }
-
-        $this->dispatch('toast', type: 'success', message: 'Status tanda tangan kontrak berhasil diubah!');
     }
 
     public function approveUploadedContract($id)
@@ -198,55 +200,72 @@ class Contract extends Component
         }
 
         try {
-            \DB::transaction(function () use ($contract) {
-                $applicant = $contract->applicant;
-
-                // 1. Create User
-                $user = User::create([
-                    'name' => $applicant->name,
-                    'email' => $applicant->email,
-                    'password' => Hash::make('password123'), // default
-                    'role' => 'employee',
-                ]);
-
-                // 2. Generate Employee ID
-                $deptCode = $contract->position
-                    ? strtoupper(substr($contract->position->department->name ?? 'EMP', 0, 3))
-                    : 'EMP';
-                $randomCode = rand(100, 999);
-                $employeeIdNumber = "EMP-{$deptCode}-{$randomCode}";
-
-                // 3. Create Employee
-                $employee = Employee::create([
-                    'user_id' => $user->id,
-                    'position_id' => $contract->position_id,
-                    'employee_id_number' => $employeeIdNumber,
-                    'nik' => $applicant->nik,
-                    'phone' => $applicant->phone,
-                    'address' => $applicant->metadata['alamat'] ?? null,
-                    'employment_status' => $contract->employment_type,
-                    'join_date' => $contract->start_date ?: now()->format('Y-m-d'),
-                    'leave_quota' => 12,
-                    'base_salary' => $contract->salary,
-                    'documents' => $applicant->documents, // Copy all documents
-                    'metadata' => $applicant->metadata,   // Copy all metadata
-                ]);
-
-                // 4. Update Contract
-                $contract->update([
-                    'employee_id' => $employee->id,
-                    'is_signed' => true,
-                    'status' => 'approved',
-                ]);
-
-                // 5. Update Applicant status to accepted
-                $applicant->update(['status' => 'accepted']);
-            });
-
+            $this->createEmployeeFromContract($contract);
             $this->dispatch('toast', type: 'success', message: 'Kontrak berhasil disetujui! Akun pengguna dan profil karyawan telah dibuat secara otomatis.');
         } catch (\Exception $e) {
             $this->dispatch('toast', type: 'error', message: 'Gagal menyetujui kontrak: '.$e->getMessage());
         }
+    }
+
+    private function createEmployeeFromContract(ContractModel $contract)
+    {
+        $applicant = $contract->applicant;
+
+        // Check if employee already exists
+        $employee = Employee::where('nik', $applicant->nik)->first();
+        if ($employee) {
+            $contract->update([
+                'employee_id' => $employee->id,
+                'is_signed' => true,
+                'status' => 'approved',
+            ]);
+            $applicant->update(['status' => 'accepted']);
+
+            return;
+        }
+
+        \DB::transaction(function () use ($contract, $applicant) {
+            // 1. Create User
+            $user = User::create([
+                'name' => $applicant->name,
+                'email' => $applicant->email,
+                'password' => Hash::make('password123'), // default
+                'role' => 'employee',
+            ]);
+
+            // 2. Generate Employee ID
+            $deptCode = $contract->position
+                ? strtoupper(substr($contract->position->department->name ?? 'EMP', 0, 3))
+                : 'EMP';
+            $randomCode = rand(100, 999);
+            $employeeIdNumber = "EMP-{$deptCode}-{$randomCode}";
+
+            // 3. Create Employee
+            $employee = Employee::create([
+                'user_id' => $user->id,
+                'position_id' => $contract->position_id,
+                'employee_id_number' => $employeeIdNumber,
+                'nik' => $applicant->nik,
+                'phone' => $applicant->phone,
+                'address' => $applicant->metadata['alamat'] ?? null,
+                'employment_status' => $contract->employment_type,
+                'join_date' => $contract->start_date ?: now()->format('Y-m-d'),
+                'leave_quota' => 12,
+                'base_salary' => $contract->salary,
+                'documents' => $applicant->documents, // Copy all documents
+                'metadata' => $applicant->metadata,   // Copy all metadata
+            ]);
+
+            // 4. Update Contract
+            $contract->update([
+                'employee_id' => $employee->id,
+                'is_signed' => true,
+                'status' => 'approved',
+            ]);
+
+            // 5. Update Applicant status to accepted
+            $applicant->update(['status' => 'accepted']);
+        });
     }
 
     public function confirmDelete($id)

@@ -15,8 +15,6 @@
                     <tr>
                         <th class="px-6 py-4">Periode Gaji</th>
                         <th class="px-6 py-4">Gaji Pokok</th>
-                        <th class="px-6 py-4">Bonus KPI</th>
-                        <th class="px-6 py-4">Potongan (KPI / Cuti)</th>
                         <th class="px-6 py-4">Potongan Kasbon</th>
                         <th class="px-6 py-4">Gaji Bersih (Net)</th>
                         <th class="px-6 py-4">Aksi</th>
@@ -30,12 +28,6 @@
                             </td>
                             <td class="whitespace-nowrap px-6 py-4">
                                 Rp {{ number_format($pay->base_salary, 0, ',', '.') }}
-                            </td>
-                            <td class="whitespace-nowrap px-6 py-4 text-emerald-600 font-semibold">
-                                + Rp {{ number_format($pay->kpi_bonus, 0, ',', '.') }}
-                            </td>
-                            <td class="whitespace-nowrap px-6 py-4 text-rose-600 font-semibold">
-                                - Rp {{ number_format($pay->kpi_deduction + $pay->leave_deduction, 0, ',', '.') }}
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-rose-600 font-semibold">
                                 - Rp {{ number_format($pay->cash_advance_deduction, 0, ',', '.') }}

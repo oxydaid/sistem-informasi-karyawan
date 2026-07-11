@@ -146,12 +146,12 @@ test('it calculates bulk payroll correctly for all employees', function () {
     $monthYear = now()->format('m-Y');
     $payrollService->calculateBulkMonthlyPayroll($monthYear);
 
-    // Verify emp1 payroll: Base 4M + 200K KPI Bonus = 4.2M
+    // Verify emp1 payroll: Base 4M (KPI Bonus ignored) = 4M
     $p1 = Payroll::where('employee_id', $emp1->id)->where('month_year', $monthYear)->first();
     expect($p1)->not->toBeNull()
         ->and($p1->base_salary)->toEqual(4000000)
-        ->and($p1->kpi_bonus)->toEqual(200000)
-        ->and($p1->net_salary)->toEqual(4200000);
+        ->and($p1->kpi_bonus)->toEqual(0)
+        ->and($p1->net_salary)->toEqual(4000000);
 
     // Verify emp2 payroll: Base 4M - 2 days unpaid (100k) = 3.9M
     $p2 = Payroll::where('employee_id', $emp2->id)->where('month_year', $monthYear)->first();

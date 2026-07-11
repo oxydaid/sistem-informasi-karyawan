@@ -159,7 +159,6 @@
                         <th class="px-6 py-4">NIK Internal / KTP</th>
                         <th class="px-6 py-4">Divisi & Jabatan</th>
                         <th class="px-6 py-4">Status & Join Date</th>
-                        <th class="px-6 py-4">Sisa Cuti</th>
                         <th class="px-6 py-4 text-right">Aksi</th>
                     </tr>
                 </thead>
@@ -210,11 +209,7 @@
                                 </div>
                                 <div class="mt-1 text-xs text-slate-400">Join: {{ $emp->join_date ? $emp->join_date->format('d M Y') : '-' }}</div>
                             </td>
-                            <td class="whitespace-nowrap px-6 py-4">
-                                <span class="inline-flex items-center justify-center h-8 px-4 rounded-xl text-xs font-bold bg-slate-50 border border-slate-200/50 text-slate-800">
-                                    {{ $emp->leave_quota }} Hari
-                                </span>
-                            </td>
+
                              <td class="whitespace-nowrap px-6 py-4 text-right text-xs font-medium space-x-2">
                                 <button type="button" wire:click="downloadZip('{{ $emp->nik }}')" 
                                         class="inline-flex h-8.5 w-8.5 items-center justify-center rounded-xl bg-sky-50 border border-sky-100 text-primary hover:bg-sky-100 transition" title="Unduh Berkas ZIP">
@@ -376,12 +371,7 @@
                                         @error('join_date') <span class="text-[10px] text-rose-600 font-semibold mt-1 block">{{ $message }}</span> @enderror
                                     </div>
 
-                                    <div>
-                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Kuota Cuti Tahunan (Hari) <span class="text-rose-500">*</span></label>
-                                        <input wire:model="leave_quota" type="number" min="0"
-                                               class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition font-semibold font-semibold">
-                                        @error('leave_quota') <span class="text-[10px] text-rose-600 font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                    </div>
+
 
                                     <div>
                                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Gaji Pokok (Rp) <span class="text-xs text-slate-400 font-normal">(Kosongkan untuk pakai default divisi)</span></label>

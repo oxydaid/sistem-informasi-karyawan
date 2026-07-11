@@ -24,18 +24,9 @@ class PayrollService
             ? $employee->base_salary
             : ($employee->position->base_salary ?? 0);
 
-        // 2. Fetch KPI adjustments for this month
-        $kpi = KpiEvaluation::where('employee_id', $employee->id)
-            ->where('month_year', $monthYear)
-            ->first();
-
+        // 2. KPI adjustments (no longer needed in calculation, set to 0)
         $kpiBonus = 0;
         $kpiDeduction = 0;
-
-        if ($kpi) {
-            $kpiBonus = $kpi->bonus_adjustment;
-            $kpiDeduction = $kpi->deduction_adjustment;
-        }
 
         // 3. Fetch approved leaves with unpaid days in this month
         // We parse the month and year from the monthYear string (format: MM-YYYY)
@@ -139,17 +130,16 @@ class PayrollService
         $deductionAmount = $settings->leave_deduction_amount ?? 50000;
 
         // 4. Chunk process employees to keep memory low
-        Employee::with(['position'])->chunk(100, function ($employees) use ($monthYear, $kpis, $leaves, $cashAdvancesGrouped, $deductionAmount) {
+        Employee::with(['position'])->chunk(100, function ($employees) use ($monthYear, $leaves, $cashAdvancesGrouped, $deductionAmount) {
             foreach ($employees as $employee) {
                 // Base salary from employee (fallback to position base salary if empty)
                 $baseSalary = ! empty($employee->base_salary) && $employee->base_salary > 0
                     ? $employee->base_salary
                     : ($employee->position->base_salary ?? 0);
 
-                // KPI adjustments
-                $kpi = $kpis->get($employee->id);
-                $kpiBonus = $kpi ? $kpi->bonus_adjustment : 0;
-                $kpiDeduction = $kpi ? $kpi->deduction_adjustment : 0;
+                // KPI adjustments (no longer needed, set to 0)
+                $kpiBonus = 0;
+                $kpiDeduction = 0;
 
                 // Leaves deduction
                 $unpaidDaysCount = $leaves->get($employee->id, 0);

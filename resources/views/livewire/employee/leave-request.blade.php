@@ -13,18 +13,6 @@
         </div>
     </div>
 
-    <!-- Stats Quota Info -->
-    <div class="mt-6 p-6 bg-white rounded-3xl border border-slate-200/60 shadow-sm flex items-center justify-between">
-        <div>
-            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Kuota Cuti Tersedia</h3>
-            <p class="text-3xl font-black text-slate-900 mt-1">{{ $employee->leave_quota }} Hari</p>
-        </div>
-        <div class="text-right">
-            <span class="text-xs text-slate-400 font-semibold block">Default Kuota Tahunan</span>
-            <span class="text-sm font-bold text-slate-800">12 Hari / Tahun</span>
-        </div>
-    </div>
-
 
     @if($showCreateForm)
         <!-- Request Leave Form Card -->

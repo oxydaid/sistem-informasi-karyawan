@@ -141,14 +141,8 @@
             <tr>
                 <td style="width: 30%;">Gaji Pokok</td>
                 <td class="amount" style="width: 20%;">Rp {{ number_format($payroll->base_salary, 0, ',', '.') }}</td>
-                <td style="width: 30%;">Potongan KPI</td>
-                <td class="amount" style="width: 20%;">Rp {{ number_format($payroll->kpi_deduction, 0, ',', '.') }}</td>
-            </tr>
-            <tr>
-                <td>Bonus Performa KPI</td>
-                <td class="amount">Rp {{ number_format($payroll->kpi_bonus, 0, ',', '.') }}</td>
-                <td>Potongan Cuti (Unpaid)</td>
-                <td class="amount">Rp {{ number_format($payroll->leave_deduction, 0, ',', '.') }}</td>
+                <td style="width: 30%;">Potongan Cuti (Unpaid)</td>
+                <td class="amount" style="width: 20%;">Rp {{ number_format($payroll->leave_deduction, 0, ',', '.') }}</td>
             </tr>
             <tr>
                 <td></td>
@@ -158,9 +152,9 @@
             </tr>
             <tr>
                 <td style="font-weight: bold;">Total Earnings</td>
-                <td class="amount" style="font-weight: bold;">Rp {{ number_format($payroll->base_salary + $payroll->kpi_bonus, 0, ',', '.') }}</td>
+                <td class="amount" style="font-weight: bold;">Rp {{ number_format($payroll->base_salary, 0, ',', '.') }}</td>
                 <td style="font-weight: bold;">Total Deductions</td>
-                <td class="amount" style="font-weight: bold;">Rp {{ number_format($payroll->kpi_deduction + $payroll->leave_deduction + $payroll->cash_advance_deduction, 0, ',', '.') }}</td>
+                <td class="amount" style="font-weight: bold;">Rp {{ number_format($payroll->leave_deduction + $payroll->cash_advance_deduction, 0, ',', '.') }}</td>
             </tr>
         </tbody>
     </table>
