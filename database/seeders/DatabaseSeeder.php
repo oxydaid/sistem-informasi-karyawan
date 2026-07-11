@@ -57,11 +57,23 @@ class DatabaseSeeder extends Seeder
 
         // Seed Users for Roles
         // 1. Super Admin
-        User::create([
+        $superAdminUser = User::create([
             'name' => 'Super Admin',
             'email' => 'admin@skynet.com',
             'password' => Hash::make('admin123'),
             'role' => 'super_admin',
+        ]);
+        // Super Admin is also an employee
+        Employee::create([
+            'user_id' => $superAdminUser->id,
+            'position_id' => $nocManager->id,
+            'employee_id_number' => 'EMP-ADM-001',
+            'nik' => '9999999999999999',
+            'phone' => '081200000000',
+            'employment_status' => 'tetap',
+            'join_date' => '2025-01-01',
+            'leave_quota' => 12,
+            'base_salary' => 10000000,
         ]);
 
         // 2. HRD

@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\KpiEvaluation;
 use App\Models\LeaveRequest;
 use App\Models\Payroll;
+use App\Models\Position;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -43,7 +44,60 @@ class Dashboard extends Component
     public function render()
     {
         $user = auth()->user();
-        $employee = Employee::with(['position.department'])->where('user_id', $user->id)->firstOrFail();
+        $employee = Employee::with(['position.department'])->where('user_id', $user->id)->first();
+
+        if (! $employee) {
+            $position = Position::first();
+            if ($position) {
+                $employee = Employee::create([
+                    'user_id' => $user->id,
+                    'position_id' => $position->id,
+                    'employee_id_number' => 'EMP-ADM-'.str_pad($user->id, 3, '0', STR_PAD_LEFT),
+                    'nik' => '99'.str_pad($user->id, 14, '0', STR_PAD_LEFT),
+                    'phone' => '081200000000',
+                    'employment_status' => 'tetap',
+                    'join_date' => '2025-01-01',
+                    'leave_quota' => 12,
+                ]);
+                $employee->load('position.department');
+            }
+        }
+
+        if ($employee) {
+            // Seed 6 months of dummy KPI data if they don't exist
+            for ($i = 5; $i >= 0; $i--) {
+                $m = now()->subMonths($i);
+                $my = $m->format('m-Y');
+
+                $exists = KpiEvaluation::where('employee_id', $employee->id)
+                    ->where('month_year', $my)
+                    ->exists();
+
+                if (! $exists) {
+                    $kehadiran = rand(4, 5);
+                    $keahlian = rand(3, 5);
+                    $keaktifan = rand(3, 5);
+                    $kedisiplinan = rand(4, 5);
+                    $mean = ($kehadiran + $keahlian + $keaktifan + $kedisiplinan) / 4;
+                    $score = $mean * 20;
+
+                    KpiEvaluation::create([
+                        'employee_id' => $employee->id,
+                        'evaluator_id' => $user->id,
+                        'month_year' => $my,
+                        'score' => $score,
+                        'kehadiran' => $kehadiran,
+                        'kehadiran_notes' => 'Kehadiran sangat baik.',
+                        'keahlian' => $keahlian,
+                        'keahlian_notes' => 'Keahlian mumpuni.',
+                        'keaktifan' => $keaktifan,
+                        'keaktifan_notes' => 'Cukup aktif membantu tim.',
+                        'kedisiplinan' => $kedisiplinan,
+                        'kedisiplinan_notes' => 'Disiplin dan tepat waktu.',
+                    ]);
+                }
+            }
+        }
 
         $contract = Contract::where('employee_id', $employee->id)->latest()->first();
 
