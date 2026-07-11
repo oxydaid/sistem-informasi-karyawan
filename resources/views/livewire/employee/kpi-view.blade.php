@@ -28,7 +28,16 @@
     <div class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-12"
          x-data="{
              initChart() {
-                 const ctx = document.getElementById('radarChartEmployee').getContext('2d');
+                 if (typeof window.Chart === 'undefined') {
+                     setTimeout(() => { this.initChart(); }, 150);
+                     return;
+                 }
+                 const canvas = document.getElementById('radarChartEmployee');
+                 if (!canvas) {
+                     setTimeout(() => { this.initChart(); }, 150);
+                     return;
+                 }
+                 const ctx = canvas.getContext('2d');
                  if (window.myEmpRadarChart) {
                      window.myEmpRadarChart.destroy();
                  }
@@ -65,7 +74,7 @@
                  });
              }
          }"
-         x-init="initChart()"
+         x-init="$nextTick(() => { initChart(); })"
          x-effect="
              let trigger = $wire.monthYear;
              $nextTick(() => { initChart(); });

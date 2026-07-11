@@ -202,56 +202,66 @@
             $prevKpiData = $detailPrevEvaluation ? [$detailPrevEvaluation->kehadiran, $detailPrevEvaluation->keahlian, $detailPrevEvaluation->keaktifan, $detailPrevEvaluation->kedisiplinan] : [0,0,0,0];
         @endphp
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
-             x-data x-init="
-                $nextTick(() => {
-                    const ctx = document.getElementById('radarChartAdmin').getContext('2d');
-                    if (window.myRadarChart) {
-                        window.myRadarChart.destroy();
-                    }
-                    window.myRadarChart = new Chart(ctx, {
-                        type: 'radar',
-                        data: {
-                            labels: ['Kehadiran', 'Keahlian', 'Keaktifan', 'Kedisiplinan'],
-                            datasets: [
-                                {
-                                    label: 'Bulan Ini (' + $wire.monthYear + ')',
-                                    data: @json($currKpiData),
-                                    fill: true,
-                                    backgroundColor: 'rgba(14, 165, 233, 0.2)',
-                                    borderColor: '#0ea5e9',
-                                    pointBackgroundColor: '#0ea5e9',
-                                    pointBorderColor: '#fff',
-                                    pointHoverBackgroundColor: '#fff',
-                                    pointHoverBorderColor: '#0ea5e9'
-                                },
-                                {
-                                    label: 'Bulan Sebelumnya',
-                                    data: @json($prevKpiData),
-                                    fill: true,
-                                    backgroundColor: 'rgba(148, 163, 184, 0.2)',
-                                    borderColor: '#94a3b8',
-                                    pointBackgroundColor: '#94a3b8',
-                                    pointBorderColor: '#fff',
-                                    pointHoverBackgroundColor: '#fff',
-                                    pointHoverBorderColor: '#94a3b8'
-                                }
-                            ]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                                r: {
-                                    angleLines: { display: true },
-                                    suggestedMin: 0,
-                                    suggestedMax: 5,
-                                    ticks: { stepSize: 1 }
-                                }
-                            }
-                        }
-                    });
-                });
-             ">
+             x-data="{
+                 initChart() {
+                     if (typeof window.Chart === 'undefined') {
+                         setTimeout(() => { this.initChart(); }, 150);
+                         return;
+                     }
+                     const canvas = document.getElementById('radarChartAdmin');
+                     if (!canvas) {
+                         setTimeout(() => { this.initChart(); }, 150);
+                         return;
+                     }
+                     const ctx = canvas.getContext('2d');
+                     if (window.myRadarChart) {
+                         window.myRadarChart.destroy();
+                     }
+                     window.myRadarChart = new Chart(ctx, {
+                         type: 'radar',
+                         data: {
+                             labels: ['Kehadiran', 'Keahlian', 'Keaktifan', 'Kedisiplinan'],
+                             datasets: [
+                                 {
+                                     label: 'Bulan Ini (' + @js($monthYear) + ')',
+                                     data: @js($currKpiData),
+                                     fill: true,
+                                     backgroundColor: 'rgba(14, 165, 233, 0.2)',
+                                     borderColor: '#0ea5e9',
+                                     pointBackgroundColor: '#0ea5e9',
+                                     pointBorderColor: '#fff',
+                                     pointHoverBackgroundColor: '#fff',
+                                     pointHoverBorderColor: '#0ea5e9'
+                                 },
+                                 {
+                                     label: 'Bulan Sebelumnya',
+                                     data: @js($prevKpiData),
+                                     fill: true,
+                                     backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                                     borderColor: '#94a3b8',
+                                     pointBackgroundColor: '#94a3b8',
+                                     pointBorderColor: '#fff',
+                                     pointHoverBackgroundColor: '#fff',
+                                     pointHoverBorderColor: '#94a3b8'
+                                 }
+                             ]
+                         },
+                         options: {
+                             responsive: true,
+                             maintainAspectRatio: false,
+                             scales: {
+                                 r: {
+                                     angleLines: { display: true },
+                                     suggestedMin: 0,
+                                     suggestedMax: 5,
+                                     ticks: { stepSize: 1 }
+                                 }
+                             }
+                         }
+                     });
+                 }
+             }"
+             x-init="$nextTick(() => { initChart(); })">
             <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 md:p-8 space-y-6">
                 <div class="flex items-center justify-between border-b border-dashed border-slate-200 pb-4">
                     <div>

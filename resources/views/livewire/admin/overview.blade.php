@@ -145,7 +145,17 @@
         <div class="mt-8 bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-6"
              x-data="{
                  initCharts() {
-                     const ctxRadar = document.getElementById('radarChartAdminOverview').getContext('2d');
+                     if (typeof window.Chart === 'undefined') {
+                         setTimeout(() => { this.initCharts(); }, 150);
+                         return;
+                     }
+                     const canvasRadar = document.getElementById('radarChartAdminOverview');
+                     const canvasLine = document.getElementById('lineChartAdminOverview');
+                     if (!canvasRadar || !canvasLine) {
+                         setTimeout(() => { this.initCharts(); }, 150);
+                         return;
+                     }
+                     const ctxRadar = canvasRadar.getContext('2d');
                      if (window.radarChartAdminOverview) window.radarChartAdminOverview.destroy();
                      window.radarChartAdminOverview = new Chart(ctxRadar, {
                          type: 'radar',
@@ -179,7 +189,7 @@
                          }
                      });
 
-                     const ctxLine = document.getElementById('lineChartAdminOverview').getContext('2d');
+                     const ctxLine = canvasLine.getContext('2d');
                      if (window.lineChartAdminOverview) window.lineChartAdminOverview.destroy();
                      window.lineChartAdminOverview = new Chart(ctxLine, {
                          type: 'line',

@@ -162,7 +162,17 @@
     <div class="mt-8 bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-6"
          x-data="{
              initCharts() {
-                 const ctxRadar = document.getElementById('radarChartEmployeeOverview').getContext('2d');
+                 if (typeof window.Chart === 'undefined') {
+                     setTimeout(() => { this.initCharts(); }, 150);
+                     return;
+                 }
+                 const canvasRadar = document.getElementById('radarChartEmployeeOverview');
+                 const canvasLine = document.getElementById('lineChartEmployeeOverview');
+                 if (!canvasRadar || !canvasLine) {
+                     setTimeout(() => { this.initCharts(); }, 150);
+                     return;
+                 }
+                 const ctxRadar = canvasRadar.getContext('2d');
                  if (window.radarChartEmployeeOverview) window.radarChartEmployeeOverview.destroy();
                  window.radarChartEmployeeOverview = new Chart(ctxRadar, {
                      type: 'radar',
@@ -196,7 +206,7 @@
                      }
                  });
 
-                 const ctxLine = document.getElementById('lineChartEmployeeOverview').getContext('2d');
+                 const ctxLine = canvasLine.getContext('2d');
                  if (window.lineChartEmployeeOverview) window.lineChartEmployeeOverview.destroy();
                  window.lineChartEmployeeOverview = new Chart(ctxLine, {
                      type: 'line',
