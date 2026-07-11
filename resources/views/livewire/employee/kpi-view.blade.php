@@ -1,5 +1,9 @@
 <div>
-    @php $title = 'Laporan Kinerja KPI Saya'; @endphp
+    @php
+        $title = 'Laporan Kinerja KPI Saya';
+        $currKpiData = $evaluation ? [$evaluation->kehadiran, $evaluation->keahlian, $evaluation->keaktifan, $evaluation->kedisiplinan] : [0,0,0,0];
+        $prevKpiData = $prevEvaluation ? [$prevEvaluation->kehadiran, $prevEvaluation->keahlian, $prevEvaluation->keaktifan, $prevEvaluation->kedisiplinan] : [0,0,0,0];
+    @endphp
 
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
@@ -22,69 +26,66 @@
 
     <!-- Main Content Grid -->
     <div class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-12"
-         x-data x-init="
-            $wire.on('renderEmployeeRadarChart', (event) => {
-                const ctx = document.getElementById('radarChartEmployee').getContext('2d');
-                if (window.myEmpRadarChart) {
-                    window.myEmpRadarChart.destroy();
-                }
-                window.myEmpRadarChart = new Chart(ctx, {
-                    type: 'radar',
-                    data: {
-                        labels: ['Kehadiran', 'Keahlian', 'Keaktifan', 'Kedisiplinan'],
-                        datasets: [
-                            {
-                                label: 'Bulan Ini (' + $wire.monthYear + ')',
-                                data: event.current,
-                                fill: true,
-                                backgroundColor: 'rgba(14, 165, 233, 0.2)',
-                                borderColor: '#0ea5e9',
-                                pointBackgroundColor: '#0ea5e9',
-                                pointBorderColor: '#fff',
-                                pointHoverBackgroundColor: '#fff',
-                                pointHoverBorderColor: '#0ea5e9'
-                            },
-                            {
-                                label: 'Bulan Sebelumnya',
-                                data: event.previous,
-                                fill: true,
-                                backgroundColor: 'rgba(148, 163, 184, 0.2)',
-                                borderColor: '#94a3b8',
-                                pointBackgroundColor: '#94a3b8',
-                                pointBorderColor: '#fff',
-                                pointHoverBackgroundColor: '#fff',
-                                pointHoverBorderColor: '#94a3b8'
-                            }
-                        ]
-                    },
-                    options: {
-                        scales: {
-                            r: {
-                                angleLines: { display: true },
-                                suggestedMin: 0,
-                                suggestedMax: 5,
-                                ticks: { stepSize: 1 }
-                            }
-                        }
-                    }
-                });
-            });
+         x-data="{
+             initChart() {
+                 const ctx = document.getElementById('radarChartEmployee').getContext('2d');
+                 if (window.myEmpRadarChart) {
+                     window.myEmpRadarChart.destroy();
+                 }
+                 window.myEmpRadarChart = new Chart(ctx, {
+                     type: 'radar',
+                     data: {
+                         labels: ['Kehadiran', 'Keahlian', 'Keaktifan', 'Kedisiplinan'],
+                         datasets: [
+                             {
+                                 label: 'Bulan Ini (' + '{{ $monthYear }}' + ')',
+                                 data: @json($currKpiData),
+                                 fill: true,
+                                 backgroundColor: 'rgba(14, 165, 233, 0.2)',
+                                 borderColor: '#0ea5e9',
+                                 pointBackgroundColor: '#0ea5e9',
+                             },
+                             {
+                                 label: 'Bulan Sebelumnya',
+                                 data: @json($prevKpiData),
+                                 fill: true,
+                                 backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                                 borderColor: '#94a3b8',
+                                 pointBackgroundColor: '#94a3b8',
+                             }
+                         ]
+                     },
+                     options: {
+                         responsive: true,
+                         maintainAspectRatio: false,
+                         scales: {
+                             r: { suggestedMin: 0, suggestedMax: 5, ticks: { stepSize: 1 } }
+                         }
+                     }
+                 });
+             }
+         }"
+         x-init="initChart()"
+         x-effect="
+             let trigger = $wire.monthYear;
+             $nextTick(() => { initChart(); });
          ">
-        <!-- Include Chart.js CDN dynamically -->
-        <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 
         <!-- Left: Spider Chart -->
         <div class="lg:col-span-5 bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm flex flex-col items-center justify-center min-h-[350px]">
             <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-6">Analisis Statistik Jaring</h3>
-            <div class="w-full max-w-xs aspect-square">
+            <div class="w-full max-w-xs h-64 relative">
                 <canvas id="radarChartEmployee"></canvas>
             </div>
         </div>
 
         <!-- Right: Metrics Breakdown -->
         <div class="lg:col-span-7 bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
-            <div>
-                <h3 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">Rincian Penilaian Dimensi Kinerja</h3>
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-base font-bold text-slate-900">Rincian Penilaian Dimensi Kinerja</h3>
+                <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-xl">
+                    Nilai Akhir (Mean): {{ number_format(($evaluation ? $evaluation->score : 0) / 20, 2) }} / 5.00
+                </span>
             </div>
 
             @if($evaluation)
@@ -127,7 +128,7 @@
                             </div>
 
                             <!-- Note -->
-                            <div class="text-[11px] text-slate-500 leading-relaxed bg-white p-2.5 rounded-xl border border-slate-200/40">
+                            <div class="text-[11px] text-slate-500 leading-relaxed bg-white p-2.5 rounded-xl border border-slate-200/40 font-semibold">
                                 <strong class="text-[10px] text-slate-400 uppercase tracking-wider block mb-1">Catatan Evaluator:</strong>
                                 {{ $notesVal ?: 'Tidak ada catatan khusus.' }}
                             </div>

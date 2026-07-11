@@ -60,12 +60,52 @@ class Dashboard extends Component
             ->take(5)
             ->get();
 
+        // KPI Analytics for logged-in employee
+        $currentKpi = KpiEvaluation::where('employee_id', $employee->id)
+            ->where('month_year', now()->format('m-Y'))
+            ->first();
+
+        $prevMonth = now()->subMonth()->format('m-Y');
+        $prevKpi = KpiEvaluation::where('employee_id', $employee->id)
+            ->where('month_year', $prevMonth)
+            ->first();
+
+        // Last 6 months history
+        $historyLabels = [];
+        $historyData = [
+            'kehadiran' => [],
+            'keahlian' => [],
+            'keaktifan' => [],
+            'kedisiplinan' => [],
+            'mean' => [],
+        ];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $m = now()->subMonths($i);
+            $my = $m->format('m-Y');
+            $historyLabels[] = $m->translatedFormat('M Y');
+
+            $eval = KpiEvaluation::where('employee_id', $employee->id)
+                ->where('month_year', $my)
+                ->first();
+
+            $historyData['kehadiran'][] = $eval ? $eval->kehadiran : 0;
+            $historyData['keahlian'][] = $eval ? $eval->keahlian : 0;
+            $historyData['keaktifan'][] = $eval ? $eval->keaktifan : 0;
+            $historyData['kedisiplinan'][] = $eval ? $eval->kedisiplinan : 0;
+            $historyData['mean'][] = $eval ? ($eval->score / 20) : 0;
+        }
+
         return view('livewire.employee.dashboard', [
             'employee' => $employee,
             'contract' => $contract,
             'avgKpi' => $avgKpi,
             'leavesCount' => $leavesCount,
             'recentPayrolls' => $recentPayrolls,
+            'currentKpi' => $currentKpi,
+            'prevKpi' => $prevKpi,
+            'historyLabels' => $historyLabels,
+            'historyData' => $historyData,
         ])->layout('layouts.app');
     }
 }

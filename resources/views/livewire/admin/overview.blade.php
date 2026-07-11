@@ -8,7 +8,7 @@
     </div>
 
     <!-- Stats Card Grid -->
-    <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
         <!-- Stat Item 1 -->
         <div class="overflow-hidden bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm flex items-center">
             <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
@@ -58,6 +58,19 @@
             <div class="ml-4">
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Payroll Aktif</p>
                 <p class="text-2xl font-black text-slate-900 mt-1">{{ $stats['active_payrolls'] }}</p>
+            </div>
+        </div>
+
+        <!-- Stat Item 5: Underperforming KPI (Mean < 3) -->
+        <div class="overflow-hidden bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm flex items-center">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <div class="ml-4">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider text-rose-500">KPI Perlu Evaluasi</p>
+                <p class="text-2xl font-black text-rose-600 mt-1">{{ $stats['underperforming_kpi'] }}</p>
             </div>
         </div>
     </div>
@@ -122,5 +135,186 @@
                 @endforelse
             </div>
         </div>
+    </div>
+
+    <!-- KPI Analytics Section -->
+    <div class="mt-8 bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-6"
+         x-data="{
+             initCharts() {
+                 const ctxRadar = document.getElementById('radarChartAdminOverview').getContext('2d');
+                 if (window.radarChartAdminOverview) window.radarChartAdminOverview.destroy();
+                 window.radarChartAdminOverview = new Chart(ctxRadar, {
+                     type: 'radar',
+                     data: {
+                         labels: ['Kehadiran', 'Keahlian', 'Keaktifan', 'Kedisiplinan'],
+                         datasets: [
+                             {
+                                 label: 'Bulan Ini',
+                                 data: @json($currentKpi ? [$currentKpi->kehadiran, $currentKpi->keahlian, $currentKpi->keaktifan, $currentKpi->kedisiplinan] : [0,0,0,0]),
+                                 fill: true,
+                                 backgroundColor: 'rgba(14, 165, 233, 0.2)',
+                                 borderColor: '#0ea5e9',
+                                 pointBackgroundColor: '#0ea5e9',
+                             },
+                             {
+                                 label: 'Bulan Sebelumnya',
+                                 data: @json($prevKpi ? [$prevKpi->kehadiran, $prevKpi->keahlian, $prevKpi->keaktifan, $prevKpi->kedisiplinan] : [0,0,0,0]),
+                                 fill: true,
+                                 backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                                 borderColor: '#94a3b8',
+                                 pointBackgroundColor: '#94a3b8',
+                             }
+                         ]
+                     },
+                     options: {
+                         responsive: true,
+                         maintainAspectRatio: false,
+                         scales: {
+                             r: { suggestedMin: 0, suggestedMax: 5, ticks: { stepSize: 1 } }
+                         }
+                     }
+                 });
+
+                 const ctxLine = document.getElementById('lineChartAdminOverview').getContext('2d');
+                 if (window.lineChartAdminOverview) window.lineChartAdminOverview.destroy();
+                 window.lineChartAdminOverview = new Chart(ctxLine, {
+                     type: 'line',
+                     data: {
+                         labels: @json($historyLabels),
+                         datasets: [
+                             {
+                                 label: 'Kehadiran',
+                                 data: @json($historyData['kehadiran']),
+                                 borderColor: '#0ea5e9',
+                                 backgroundColor: '#0ea5e9',
+                                 tension: 0.3,
+                                 fill: false
+                             },
+                             {
+                                 label: 'Keahlian',
+                                 data: @json($historyData['keahlian']),
+                                 borderColor: '#10b981',
+                                 backgroundColor: '#10b981',
+                                 tension: 0.3,
+                                 fill: false
+                             },
+                             {
+                                 label: 'Keaktifan',
+                                 data: @json($historyData['keaktifan']),
+                                 borderColor: '#a855f7',
+                                 backgroundColor: '#a855f7',
+                                 tension: 0.3,
+                                 fill: false
+                             },
+                             {
+                                 label: 'Kedisiplinan',
+                                 data: @json($historyData['kedisiplinan']),
+                                 borderColor: '#f59e0b',
+                                 backgroundColor: '#f59e0b',
+                                 tension: 0.3,
+                                 fill: false
+                             },
+                             {
+                                 label: 'Overall Mean',
+                                 data: @json($historyData['mean']),
+                                 borderColor: '#ef4444',
+                                 backgroundColor: '#ef4444',
+                                 borderDash: [5, 5],
+                                 tension: 0.3,
+                                 fill: false
+                             }
+                         ]
+                     },
+                     options: {
+                         responsive: true,
+                         maintainAspectRatio: false,
+                         scales: {
+                             y: { suggestedMin: 0, suggestedMax: 5, ticks: { stepSize: 1 } }
+                         }
+                     }
+                 });
+             }
+         }"
+         x-init="initCharts()"
+         x-effect="
+             let trigger = $wire.selectedEmployeeId;
+             $nextTick(() => { initCharts(); });
+         ">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4 gap-4">
+            <div>
+                <h3 class="text-base font-bold text-slate-900">Statistik & Analisis KPI Karyawan</h3>
+                <p class="text-xs text-slate-400">Analisis visual spider chart dan line chart per dimensi penilaian.</p>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-700">Pilih Karyawan:</span>
+                <select wire:model.live="selectedEmployeeId"
+                        class="block rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-1.5 text-xs font-semibold text-slate-700 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition">
+                    @foreach($allEmployees as $emp)
+                        <option value="{{ $emp->id }}">{{ $emp->user->name }} ({{ $emp->employee_id_number }})</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        @if($selectedEmployeeId)
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Left: Spider Chart -->
+                <div class="lg:col-span-5 flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-200/50 min-h-[300px]">
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Perbandingan Bulan Ini vs Bulan Lalu (Spider Chart)</h4>
+                    <div class="w-full max-w-xs h-64 relative">
+                        <canvas id="radarChartAdminOverview"></canvas>
+                    </div>
+                </div>
+
+                <!-- Right: Line Chart -->
+                <div class="lg:col-span-7 flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-200/50 min-h-[300px]">
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Tren Performa 6 Bulan Terakhir (Line Chart)</h4>
+                    <div class="w-full h-64 relative">
+                        <canvas id="lineChartAdminOverview"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes & Overall Score -->
+            <div class="mt-6 pt-6 border-t border-slate-100 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-50 pb-2">
+                    <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Ulasan Catatan Bulan Ini</h4>
+                    <span class="text-xs font-bold text-primary bg-sky-50 border border-sky-100 px-3 py-1 rounded-xl">
+                        Nilai Akhir (Mean): {{ number_format(($currentKpi ? $currentKpi->score : 0) / 20, 2) }} / 5.00
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    @php
+                        $keys = [
+                            'kehadiran' => ['label' => 'Kehadiran', 'color' => 'sky'],
+                            'keahlian' => ['label' => 'Keahlian', 'color' => 'emerald'],
+                            'keaktifan' => ['label' => 'Keaktifan', 'color' => 'purple'],
+                            'kedisiplinan' => ['label' => 'Kedisiplinan', 'color' => 'amber']
+                        ];
+                    @endphp
+
+                    @foreach($keys as $k => $info)
+                        @php
+                            $val = $currentKpi ? $currentKpi->$k : 0;
+                            $notes = $currentKpi ? $currentKpi->{$k.'_notes'} : '';
+                        @endphp
+                        <div class="p-3 bg-slate-50 border border-slate-200/40 rounded-xl space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-800">{{ $info['label'] }}</span>
+                                <span class="text-xs font-extrabold text-primary">{{ $val }} / 5</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 leading-relaxed italic bg-white p-2 rounded-lg border border-slate-100 min-h-[50px]">
+                                {{ $notes ?: 'Tidak ada catatan.' }}
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @else
+            <p class="text-xs text-slate-400 text-center py-8">Belum ada karyawan untuk dianalisis.</p>
+        @endif
     </div>
 </div>

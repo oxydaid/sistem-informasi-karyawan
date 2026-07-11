@@ -33,7 +33,6 @@
 
     <!-- Stats Grid -->
     <div class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-
         <!-- Leaves Taken -->
         <div class="overflow-hidden bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm flex items-center">
             <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50 text-purple-600">
@@ -55,8 +54,8 @@
                 </svg>
             </div>
             <div class="ml-4">
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Skor KPI Rerata</p>
-                <p class="text-2xl font-black text-slate-900 mt-1">{{ number_format($avgKpi, 1) }} <span class="text-xs text-slate-400 font-bold">/100</span></p>
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">KPI Rerata Kumulatif</p>
+                <p class="text-2xl font-black text-slate-900 mt-1">{{ number_format($avgKpi / 20, 2) }} <span class="text-xs text-slate-400 font-bold">/ 5.00</span></p>
             </div>
         </div>
 
@@ -76,7 +75,6 @@
 
     <!-- Workspace Details Grid -->
     <div class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-12">
-        
         <!-- Left Side: Profile & Contract info -->
         <div class="lg:col-span-5 space-y-6">
             <div class="bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
@@ -153,6 +151,175 @@
                     @endforelse
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- KPI Analytics Section for Employee -->
+    <div class="mt-8 bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-6"
+         x-data="{
+             initCharts() {
+                 const ctxRadar = document.getElementById('radarChartEmployeeOverview').getContext('2d');
+                 if (window.radarChartEmployeeOverview) window.radarChartEmployeeOverview.destroy();
+                 window.radarChartEmployeeOverview = new Chart(ctxRadar, {
+                     type: 'radar',
+                     data: {
+                         labels: ['Kehadiran', 'Keahlian', 'Keaktifan', 'Kedisiplinan'],
+                         datasets: [
+                             {
+                                 label: 'Bulan Ini (' + '{{ now()->format('m-Y') }}' + ')',
+                                 data: @json($currentKpi ? [$currentKpi->kehadiran, $currentKpi->keahlian, $currentKpi->keaktifan, $currentKpi->kedisiplinan] : [0,0,0,0]),
+                                 fill: true,
+                                 backgroundColor: 'rgba(14, 165, 233, 0.2)',
+                                 borderColor: '#0ea5e9',
+                                 pointBackgroundColor: '#0ea5e9',
+                             },
+                             {
+                                 label: 'Bulan Sebelumnya',
+                                 data: @json($prevKpi ? [$prevKpi->kehadiran, $prevKpi->keahlian, $prevKpi->keaktifan, $prevKpi->kedisiplinan] : [0,0,0,0]),
+                                 fill: true,
+                                 backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                                 borderColor: '#94a3b8',
+                                 pointBackgroundColor: '#94a3b8',
+                             }
+                         ]
+                     },
+                     options: {
+                         responsive: true,
+                         maintainAspectRatio: false,
+                         scales: {
+                             r: { suggestedMin: 0, suggestedMax: 5, ticks: { stepSize: 1 } }
+                         }
+                     }
+                 });
+
+                 const ctxLine = document.getElementById('lineChartEmployeeOverview').getContext('2d');
+                 if (window.lineChartEmployeeOverview) window.lineChartEmployeeOverview.destroy();
+                 window.lineChartEmployeeOverview = new Chart(ctxLine, {
+                     type: 'line',
+                     data: {
+                         labels: @json($historyLabels),
+                         datasets: [
+                             {
+                                 label: 'Kehadiran',
+                                 data: @json($historyData['kehadiran']),
+                                 borderColor: '#0ea5e9',
+                                 backgroundColor: '#0ea5e9',
+                                 tension: 0.3,
+                                 fill: false
+                             },
+                             {
+                                 label: 'Keahlian',
+                                 data: @json($historyData['keahlian']),
+                                 borderColor: '#10b981',
+                                 backgroundColor: '#10b981',
+                                 tension: 0.3,
+                                 fill: false
+                             },
+                             {
+                                 label: 'Keaktifan',
+                                 data: @json($historyData['keaktifan']),
+                                 borderColor: '#a855f7',
+                                 backgroundColor: '#a855f7',
+                                 tension: 0.3,
+                                 fill: false
+                             },
+                             {
+                                 label: 'Kedisiplinan',
+                                 data: @json($historyData['kedisiplinan']),
+                                 borderColor: '#f59e0b',
+                                 backgroundColor: '#f59e0b',
+                                 tension: 0.3,
+                                 fill: false
+                             },
+                             {
+                                 label: 'Overall Mean',
+                                 data: @json($historyData['mean']),
+                                 borderColor: '#ef4444',
+                                 backgroundColor: '#ef4444',
+                                 borderDash: [5, 5],
+                                 tension: 0.3,
+                                 fill: false
+                             }
+                         ]
+                     },
+                     options: {
+                         responsive: true,
+                         maintainAspectRatio: false,
+                         scales: {
+                             y: { suggestedMin: 0, suggestedMax: 5, ticks: { stepSize: 1 } }
+                         }
+                     }
+                 });
+             }
+         }"
+         x-init="initCharts()">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4 gap-4">
+            <div>
+                <h3 class="text-base font-bold text-slate-900">Statistik & Analisis KPI Saya</h3>
+                <p class="text-xs text-slate-400">Tinjau grafik jaring dan tren historis performa bulanan Anda.</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left: Spider Chart -->
+            <div class="lg:col-span-5 flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-200/50 min-h-[300px]">
+                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Grafik Jaring Performa (Spider Chart)</h4>
+                <div class="w-full max-w-xs h-64 relative">
+                    <canvas id="radarChartEmployeeOverview"></canvas>
+                </div>
+            </div>
+
+            <!-- Right: Line Chart -->
+            <div class="lg:col-span-7 flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-200/50 min-h-[300px]">
+                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Tren Performa 6 Bulan Terakhir (Line Chart)</h4>
+                <div class="w-full h-64 relative">
+                    <canvas id="lineChartEmployeeOverview"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes & Overall Score -->
+        <div class="mt-6 pt-6 border-t border-slate-100 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-50 pb-2">
+                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Ulasan & Catatan Evaluator Bulan Ini</h4>
+                <span class="text-xs font-bold text-primary bg-sky-50 border border-sky-100 px-3 py-1 rounded-xl">
+                    Nilai Akhir (Mean): {{ number_format(($currentKpi ? $currentKpi->score : 0) / 20, 2) }} / 5.00
+                </span>
+            </div>
+
+            @if($currentKpi)
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    @php
+                        $keys = [
+                            'kehadiran' => ['label' => 'Kehadiran', 'color' => 'sky'],
+                            'keahlian' => ['label' => 'Keahlian', 'color' => 'emerald'],
+                            'keaktifan' => ['label' => 'Keaktifan', 'color' => 'purple'],
+                            'kedisiplinan' => ['label' => 'Kedisiplinan', 'color' => 'amber']
+                        ];
+                    @endphp
+
+                    @foreach($keys as $k => $info)
+                        @php
+                            $val = $currentKpi ? $currentKpi->$k : 0;
+                            $notes = $currentKpi ? $currentKpi->{$k.'_notes'} : '';
+                        @endphp
+                        <div class="p-3 bg-slate-50 border border-slate-200/40 rounded-xl space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-800">{{ $info['label'] }}</span>
+                                <span class="text-xs font-extrabold text-primary">{{ $val }} / 5</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 leading-relaxed italic bg-white p-2 rounded-lg border border-slate-100 min-h-[50px]">
+                                {{ $notes ?: 'Tidak ada catatan khusus.' }}
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center text-xs font-medium text-slate-400">
+                    Data KPI Anda belum diterbitkan oleh atasan/HRD untuk bulan ini.
+                </div>
+            @endif
         </div>
     </div>
 </div>
