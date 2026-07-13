@@ -1,2 +1,4 @@
 import Chart from 'chart.js/auto';
-window.Chart = Chart;
+if (!window.Chart) {
+    window.Chart = Chart;
+}

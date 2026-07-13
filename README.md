@@ -43,12 +43,12 @@ Fitur ini mempermudah pelamar saat mendaftar dengan memindai berkas KTP secara o
 
 ---
 
-### 2. WhatsApp Gateway Service (Express & Baileys Baileys)
+### 2. WhatsApp Gateway Service (Express & Baileys)
 Sistem memiliki server mikro WhatsApp Gateway asinkron yang berjalan secara lokal untuk menjamin efisiensi pengiriman notifikasi slip gaji bulanan kepada karyawan.
 * **Arsitektur:** Dibangun menggunakan Node.js Express dan library `@whiskeysockets/baileys` untuk mengkoneksikan sesi WhatsApp Web lokal menggunakan otentikasi multi-file-auth.
 * **Otentikasi Kunci Rahasia:** Untuk mencegah penyalahgunaan endpoint gateway, middleware server Node.js membaca kolom `whatsapp_gateway_secret` secara dinamis langsung dari database MariaDB `app_settings` untuk memvalidasi header token `X-Gateway-Secret`.
 * **Fitur Utama:**
-  * **Pairing QR Code:** Halaman administrasi admin menyediakan QR Code real-time yang memuat gambar pairing code terupdate (auto-refresh via pooling request status).
+  * **Pairing & Reset QR Code:** Halaman administrasi menyediakan QR Code real-time (auto-refresh) dan fitur **Reset Sesi** (melalui endpoint POST `/reset` di server gateway) untuk menutup socket Baileys secara paksa dan menghapus cache credentials di folder `session_auth/` jika sesi terganggu (stuck) atau QR code gagal dipindai.
   * **Pengiriman Media PDF Slip Gaji:** Menggunakan modul pendeteksi tipe mime otomatis untuk mendistribusikan berkas slip gaji resmi PDF (dengan URL berkas storage Laravel publik) yang langsung terlampir di WhatsApp karyawan.
   * **Perlindungan Terhadap Ban (Anti-Ban Blast Engine):** Untuk mencegah pemblokiran nomor WhatsApp pengirim akibat pengiriman pesan massal (*blast*) secara bersamaan, loop pemrosesan notifikasi menerapkan **asynchronous delay/sleep selama 5 detik** per nomor telepon.
 
@@ -68,6 +68,32 @@ Payroll Engine dirancang untuk menghitung pendapatan bersih bulanan staf secara 
   - Menggunakan query bulk preloading `with(['position'])` untuk menghindari masalah query N+1.
   - Membaca semua KPI dan data cuti bulanan sekali jalan, kemudian melakukan pengindeksan data di memori menggunakan PHP associative array (`keyBy('employee_id')`).
   - Menerapkan pemrosesan bertahap (*chunk processing*) sebanyak 100 data karyawan per siklus (`Employee::chunk(100)`) agar konsumsi RAM tetap konstan dan rendah.
+
+---
+
+### 4. Integrasi Absensi API eBilling & Pemetaan Karyawan Permanen
+Fitur ini menyinkronkan data absensi/check-in harian karyawan dari API eBilling (yang dikirimkan staf via WhatsApp) ke database lokal, mengaitkannya dengan data karyawan internal secara pemetaan profil permanen, dan memanfaatkannya untuk penilaian KPI bulanan.
+* **Mekanisme Sinkronisasi (eBilling API & CLI Commands):**
+  * **Sinkronisasi Harian Otomatis:** Perintah Artisan `php artisan app:fetch-attendance` dijadwalkan berjalan otomatis setiap hari pukul **17:00 WIB** (dikonfigurasi pada `routes/console.php`). Perintah ini menarik check-in hari berjalan dari endpoint `/api/attendances/export` milik API eBilling.
+  * **Sinkronisasi Bulanan Manual (Optimasi Rentang):** Admin dapat melakukan sinkronisasi untuk periode 1 bulan penuh menggunakan perintah `php artisan app:fetch-attendance-month {month?}` (format `MM-YYYY` atau `YYYY-MM`). Sinkronisasi ini menggunakan range query (`from` dan `to`) untuk meminimalisasi overhead jaringan dan panggilan API berulang.
+  * **Penyaringan Duplikasi:** Setiap log absensi dipisahkan menggunakan kolom `message_id` unik dari eBilling. Jika record memiliki `message_id` yang sama atau kecocokan nama pengirim (`sender_name`) dan tanggal absensi (`date`), sistem akan melewatinya (*skip*) untuk menghindari data ganda.
+* **Mesin Pemetaan Karyawan Permanen (Permanent Mapping Engine):**
+  * Menghubungkan `sender_name` (nama pengirim chat WhatsApp) ke `employee_id` (karyawan internal) secara permanen tanpa perlu memetakannya berulang kali di setiap hari atau periode bulan baru.
+  * **Struktur Penyimpanan:** Menggunakan kolom database `whatsapp_sender_name` pada tabel `employees` yang ditambahkan melalui migration.
+  * **Alur Pemetaan & Auto-Save:**
+    1. **Peta Profil Langsung:** Saat sinkronisasi menarik check-in baru, sistem mencari kecocokan nama pengirim secara eksak pada kolom `whatsapp_sender_name` di tabel karyawan.
+    2. **Auto-Match Berbasis Nama:** Jika tidak ditemukan pemetaan profil, sistem mencari kecocokan nama (*case-insensitive*) pada nama pengguna terkait. Jika cocok, sistem **secara otomatis meng-update kolom `whatsapp_sender_name`** tersebut pada profil karyawan secara permanen.
+    3. **Fallback Data Historis:** Sebagai langkah terakhir, sistem mencari pemetaan manual terakhir pada data historis tabel `attendances` dan langsung menyalinnya ke profil karyawan untuk otomatisasi masa depan.
+    4. **Pembaruan Massal Secara Instan:** Saat admin mengubah dropdown pemetaan di halaman admin absensi, sistem memperbarui field `whatsapp_sender_name` pada profil karyawan terpilih dan memperbarui seluruh data historis log absensi masa lalu dengan nama pengirim tersebut.
+* **Skala Penilaian KPI Kehadiran Bulanan:**
+  * Persentase kehadiran bulanan karyawan dihitung secara dinamis dari tabel `attendances` (total hari berstatus `hadir` dibagi total hari kerja efektif dalam bulan tersebut).
+  * Status absensi `cuti`, `izin`, dan `libur` (yang disesuaikan per karyawan karena hari off berbeda-beda) dikategorikan sebagai *excused absence* (tidak dihitung sebagai pengurangan nilai kehadiran dalam KPI).
+  * Hasil persentase kehadiran dikonversi menjadi skala nilai **1 s/d 5** untuk modul KPI dengan skala konversi berikut:
+    * **90% - 100%** -> Skor 5
+    * **80% - 89%**   -> Skor 4
+    * **70% - 79%**   -> Skor 3
+    * **60% - 69%**   -> Skor 2
+    * **0% - 59%**    -> Skor 1
 
 ---
 
@@ -111,6 +137,7 @@ Berikut adalah seluruh daftar halaman aplikasi SI Karyawan yang telah diterjemah
 | 11 | **Departemen & Jabatan** | `/admin/departemen` | Admin / HRD | CRUD departemen/divisi kerja dan posisi jabatan lengkap dengan konfigurasi gaji pokok default. |
 | 12 | **Persetujuan Cuti** | `/admin/cuti` | Admin / HRD / Manager | Persetujuan pengajuan cuti staf. Manager menyetujui di tingkat divisi, HRD memfinalisasi di tingkat pusat. Sistem otomatis menghitung potongan hari tidak dibayar (*unpaid days*) jika melampaui sisa kuota. |
 | 13 | **Evaluasi Kinerja (KPI)** | `/admin/kpi` | Admin / Manager | Penilaian bulanan staf bawahan secara individual (skor 1-100, penyesuaian nominal bonus, potongan performa, serta catatan evaluasi). |
+| 13.1 | **Rekapitulasi Absensi** | `/admin/absensi` | Admin / HRD | Menampilkan rekapitulasi absensi bulanan 1-31 hari hasil sinkronisasi API eBilling, pemetaan karyawan permanen, sync harian/bulanan instan, dan perubahan status manual. |
 | 14 | **Proses Penggajian (Payroll)** | `/admin/penggajian` | Admin / Keuangan | Kalkulasi gaji bulanan secara bulk (massal) untuk efisiensi performa 1000+ data karyawan, pratinjau PDF, dan blast slip gaji via WhatsApp secara asinkron dengan jeda waktu aman 5 detik. |
 | 15 | **Manajemen Kasbon Staf** | `/admin/kasbon` | Admin / Keuangan | Persetujuan/penolakan pinjaman uang muka karyawan. Jika disetujui, nominal kasbon akan langsung dikurangkan secara otomatis pada slip gaji bulan berjalan. |
 | 16 | **Dasbor Karyawan** | `/karyawan/dasbor` | Karyawan | Panel ringkasan profil staf, sisa kuota cuti tahunan, status KPI bulanan, dan log pengajuan kasbon terbaru. |
@@ -193,48 +220,61 @@ Langkah deployment langsung pada VPS dengan OS Ubuntu:
 
 ---
 
-### 🐳 Metode B: Docker Compose (Direkomendasikan)
-Metode containerized untuk kemudahan duplikasi lingkungan kerja tanpa perlu instalasi PHP/Node lokal:
-1. **Pastikan Docker & Docker Compose Terpasang.**
-2. **Jalankan Container Bulanan:**
+### 🐳 Metode B: Docker Compose (Produksi)
+Untuk deployment ke lingkungan production menggunakan Docker Compose:
+1. **Jalankan Container Produksi:**
    Jalankan perintah ini di root direktori project:
    ```bash
-   docker compose up -d --build
+   docker compose -f docker-compose.prod.yml up -d --build
    ```
-3. **Inisialisasi Project inside Container:**
+2. **Inisialisasi Database (Pertama kali):**
    ```bash
-   docker compose exec app composer install
-   docker compose exec app php artisan migrate:fresh --seed
-   docker compose exec app php artisan storage:link
+   docker compose -f docker-compose.prod.yml exec app php artisan migrate --seed
    ```
-4. **Selesai.** Aplikasi dapat diakses melalui browser di alamat `http://localhost`. WhatsApp gateway otomatis aktif di `http://localhost:4000`.
+3. **Akses Layanan:**
+   - Aplikasi Web Laravel: `http://localhost` (Port 80)
+   - WhatsApp Gateway: `http://localhost:6969` (Port 6969)
 
 ---
 
-### 🎛️ Metode C: cPanel Shared Hosting (Manual Upload)
-Jika Anda menggunakan shared hosting konvensional tanpa akses root terminal:
-1. **Unggah dan Pisahkan Direktori:**
-   - Ekstrak seluruh file proyek Anda.
-   - Pindahkan folder `/public` dari proyek ke dalam direktori `public_html`.
-   - Untuk alasan keamanan agar kode backend PHP tidak dapat diakses langsung oleh publik, letakkan seluruh folder sisa (seperti `/app`, `/bootstrap`, `/config`, dll) di direktori utama hosting Anda (luar `public_html`, contoh: `/home/username/si-karyawan`).
-2. **Sesuaikan Path Bootstrapping:**
-   Buka file `public_html/index.php` dan sesuaikan path require agar mengarah ke direktori baru di luar folder publik:
-   ```php
-   require __DIR__.'/../si-karyawan/vendor/autoload.php';
-   $app = require_once __DIR__.'/../si-karyawan/bootstrap/app.php';
-   ```
-3. **Atur Izin Menulis Berkas (File Permission):**
-   Ubah permission folder `/home/username/si-karyawan/storage` dan `/home/username/si-karyawan/bootstrap/cache` ke **775** atau **755** (tergantung spesifikasi hosting) agar server web dapat menulis berkas unggahan dan cache.
-4. **Jalankan WhatsApp Gateway (Node.js App):**
-   - Di dasbor cPanel, cari menu **"Setup Node.js App"**.
-   - Klik **Create Application**.
-   - Set **Application Root** ke `/home/username/si-karyawan/whatsapp` dan **Startup File** ke `index.js`.
-   - Jalankan perintah NPM Install melalui interface cPanel untuk memasang seluruh dependensi gateway.
-5. **Konfigurasi Cron Job Scheduler Laravel:**
-   Masuk ke menu **Cron Jobs** di cPanel dan buat cron baru setiap 1 menit sekali untuk memicu antrian pengiriman PDF dan webhook:
+### ⛵ Metode C: Laravel Sail (Pengembangan Lokal)
+Untuk menjalankan lingkungan kerja lokal dengan Laravel Sail (Docker):
+1. **Jalankan Sail:**
    ```bash
-   * * * * * /usr/local/bin/php /home/username/si-karyawan/artisan schedule:run >> /dev/null 2>&1
+   ./vendor/bin/sail up -d
+   # atau menggunakan docker compose langsung
+   docker compose up -d
    ```
+2. **Inisialisasi Project:**
+   ```bash
+   ./vendor/bin/sail artisan migrate --seed
+   ```
+3. **Akses Layanan:**
+   - Aplikasi Web Laravel: `http://localhost` (Port 80)
+   - Mailpit Dashboard (Catch-all Email): `http://localhost:8025`
+   - WhatsApp Gateway (Local Node): `http://localhost:6969`
+
+---
+
+### 🎛️ Metode D: cPanel Shared Hosting (Manual Upload)
+Jika menggunakan shared hosting tanpa akses root terminal/Docker:
+- Kami menyediakan konfigurasi `.htaccess` root pengarah otomatis serta panduan konfigurasi lengkap.
+- Silakan ikuti instruksi langkah-demi-langkah pada dokumen panduan: **[DEPLOY_CPANEL.md](DEPLOY_CPANEL.md)**.
+
+---
+
+### ☁️ Metode E: Coolify & Nixpacks (Cloud Deployment)
+Untuk mendeploy ke Cloud PaaS seperti Coolify menggunakan Nixpacks atau Docker Compose:
+- Konfigurasi Nixpacks disediakan di file **[nixpacks.toml](nixpacks.toml)**.
+- Panduan langkah-demi-langkah integrasi dapat dilihat di: **[DEPLOY_COOLIFY.md](DEPLOY_COOLIFY.md)**.
+
+---
+
+### ⚙️ Metode F: Supervisor (VPS Queue & Daemon)
+Untuk menjaga agar antrian Laravel (*Queue Worker*) dan WhatsApp Gateway (Node.js) tetap berjalan secara persisten di VPS:
+- Konfigurasi Supervisor Laravel Worker: **[supervisor/laravel-worker.conf](supervisor/laravel-worker.conf)**
+- Konfigurasi Supervisor WhatsApp Gateway: **[supervisor/whatsapp-gateway.conf](supervisor/whatsapp-gateway.conf)**
+- Instruksi instalasi dan aktivasi Supervisor ditulis langsung di dalam file konfigurasi `whatsapp-gateway.conf`.
 
 ---
 

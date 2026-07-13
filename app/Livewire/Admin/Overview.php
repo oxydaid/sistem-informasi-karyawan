@@ -8,6 +8,7 @@ use App\Models\KpiEvaluation;
 use App\Models\LeaveRequest;
 use App\Models\Payroll;
 use App\Models\Position;
+use App\Services\KpiService;
 use Livewire\Component;
 
 class Overview extends Component
@@ -67,8 +68,9 @@ class Overview extends Component
                     ->exists();
 
                 if (! $exists) {
+                    $kpiService = new KpiService;
                     $kehadiran = rand(4, 5);
-                    $keahlian = rand(3, 5);
+                    $keahlian = $kpiService->getKeahlianScore($employee);
                     $keaktifan = rand(3, 5);
                     $kedisiplinan = rand(4, 5);
                     $mean = ($kehadiran + $keahlian + $keaktifan + $kedisiplinan) / 4;
@@ -82,7 +84,7 @@ class Overview extends Component
                         'kehadiran' => $kehadiran,
                         'kehadiran_notes' => 'Kehadiran sangat baik.',
                         'keahlian' => $keahlian,
-                        'keahlian_notes' => 'Keahlian mumpuni.',
+                        'keahlian_notes' => $keahlian === 5 ? 'Memiliki sertifikat keahlian resmi.' : 'Keahlian mumpuni.',
                         'keaktifan' => $keaktifan,
                         'keaktifan_notes' => 'Cukup aktif membantu tim.',
                         'kedisiplinan' => $kedisiplinan,
@@ -100,8 +102,8 @@ class Overview extends Component
                 ->where('month_year', $prevMonth)
                 ->first();
 
-            // Last 6 months history
-            for ($i = 5; $i >= 0; $i--) {
+            // Last 3 months history
+            for ($i = 2; $i >= 0; $i--) {
                 $m = now()->subMonths($i);
                 $my = $m->format('m-Y');
                 $historyLabels[] = $m->translatedFormat('M Y');

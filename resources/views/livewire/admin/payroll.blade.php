@@ -6,6 +6,12 @@
             <p class="mt-2 text-sm text-slate-500">Kelola perhitungan gaji staf bulanan, validasi penyesuaian finansial, terbitkan slip gaji, dan lakukan pembayaran gaji.</p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-2">
+            @if($payrolls->where('status', 'draft')->isNotEmpty())
+                <button type="button" wire:click="approveAllPayroll" 
+                        class="inline-flex items-center justify-center rounded-2xl bg-sky-50 px-5 py-2.5 text-sm font-semibold text-sky-700 border border-sky-200 hover:bg-sky-100/80 transition active:scale-[0.98]">
+                    <span>Setujui Semua (Approve All)</span>
+                </button>
+            @endif
             <button type="button" wire:click="blastPayslipWa" 
                     wire:loading.attr="disabled"
                     class="inline-flex items-center justify-center rounded-2xl bg-emerald-50 px-5 py-2.5 text-sm font-semibold text-emerald-700 border border-emerald-200 hover:bg-emerald-100/80 transition active:scale-[0.98]">

@@ -238,5 +238,8 @@ class DatabaseSeeder extends Seeder
                 'jenis_kelamin' => 'Perempuan',
             ],
         ]);
+
+        // Seed KPI evaluations
+        $this->call(KpiEvaluationSeeder::class);
     }
 }

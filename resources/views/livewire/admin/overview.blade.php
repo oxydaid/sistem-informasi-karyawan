@@ -142,114 +142,7 @@
             $currKpiData = $currentKpi ? [$currentKpi->kehadiran, $currentKpi->keahlian, $currentKpi->keaktifan, $currentKpi->kedisiplinan] : [0,0,0,0];
             $prevKpiData = $prevKpi ? [$prevKpi->kehadiran, $prevKpi->keahlian, $prevKpi->keaktifan, $prevKpi->kedisiplinan] : [0,0,0,0];
         @endphp
-        <div class="mt-8 bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-6"
-             x-data="{
-                 initCharts() {
-                     if (typeof window.Chart === 'undefined') {
-                         setTimeout(() => { this.initCharts(); }, 150);
-                         return;
-                     }
-                     const canvasRadar = document.getElementById('radarChartAdminOverview');
-                     const canvasLine = document.getElementById('lineChartAdminOverview');
-                     if (!canvasRadar || !canvasLine) {
-                         setTimeout(() => { this.initCharts(); }, 150);
-                         return;
-                     }
-                     const ctxRadar = canvasRadar.getContext('2d');
-                     if (window.radarChartAdminOverview) window.radarChartAdminOverview.destroy();
-                     window.radarChartAdminOverview = new Chart(ctxRadar, {
-                         type: 'radar',
-                         data: {
-                             labels: ['Kehadiran', 'Keahlian', 'Keaktifan', 'Kedisiplinan'],
-                             datasets: [
-                                 {
-                                     label: 'Bulan Ini (' + '{{ now()->format('m-Y') }}' + ')',
-                                     data: @json($currKpiData),
-                                     fill: true,
-                                     backgroundColor: 'rgba(14, 165, 233, 0.2)',
-                                     borderColor: '#0ea5e9',
-                                     pointBackgroundColor: '#0ea5e9',
-                                 },
-                                 {
-                                     label: 'Bulan Sebelumnya',
-                                     data: @json($prevKpiData),
-                                     fill: true,
-                                     backgroundColor: 'rgba(148, 163, 184, 0.2)',
-                                     borderColor: '#94a3b8',
-                                     pointBackgroundColor: '#94a3b8',
-                                 }
-                             ]
-                         },
-                         options: {
-                             responsive: true,
-                             maintainAspectRatio: false,
-                             scales: {
-                                 r: { suggestedMin: 0, suggestedMax: 5, ticks: { stepSize: 1 } }
-                             }
-                         }
-                     });
-
-                     const ctxLine = canvasLine.getContext('2d');
-                     if (window.lineChartAdminOverview) window.lineChartAdminOverview.destroy();
-                     window.lineChartAdminOverview = new Chart(ctxLine, {
-                         type: 'line',
-                         data: {
-                             labels: @json($historyLabels),
-                             datasets: [
-                                 {
-                                     label: 'Kehadiran',
-                                     data: @json($historyData['kehadiran']),
-                                     borderColor: '#0ea5e9',
-                                     backgroundColor: '#0ea5e9',
-                                     tension: 0.3,
-                                     fill: false
-                                 },
-                                 {
-                                     label: 'Keahlian',
-                                     data: @json($historyData['keahlian']),
-                                     borderColor: '#10b981',
-                                     backgroundColor: '#10b981',
-                                     tension: 0.3,
-                                     fill: false
-                                 },
-                                 {
-                                     label: 'Keaktifan',
-                                     data: @json($historyData['keaktifan']),
-                                     borderColor: '#a855f7',
-                                     backgroundColor: '#a855f7',
-                                     tension: 0.3,
-                                     fill: false
-                                 },
-                                 {
-                                     label: 'Kedisiplinan',
-                                     data: @json($historyData['kedisiplinan']),
-                                     borderColor: '#f59e0b',
-                                     backgroundColor: '#f59e0b',
-                                     tension: 0.3,
-                                     fill: false
-                                 },
-                                 {
-                                     label: 'Overall Mean',
-                                     data: @json($historyData['mean']),
-                                     borderColor: '#ef4444',
-                                     backgroundColor: '#ef4444',
-                                     borderDash: [5, 5],
-                                     tension: 0.3,
-                                     fill: false
-                                 }
-                             ]
-                         },
-                         options: {
-                             responsive: true,
-                             maintainAspectRatio: false,
-                             scales: {
-                                 y: { suggestedMin: 0, suggestedMax: 5, ticks: { stepSize: 1 } }
-                             }
-                         }
-                     });
-                 }
-             }"
-             x-init="$nextTick(() => { initCharts(); })">
+        <div class="mt-8 bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-6">
             
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4 gap-4">
                 <div>
@@ -258,7 +151,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8" wire:ignore>
                 <!-- Left: Spider Chart -->
                 <div class="lg:col-span-5 flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-200/50 min-h-[300px]">
                     <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Perbandingan Bulan Ini vs Bulan Lalu (Spider Chart)</h4>
@@ -269,12 +162,142 @@
 
                 <!-- Right: Line Chart -->
                 <div class="lg:col-span-7 flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-200/50 min-h-[300px]">
-                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Tren Performa 6 Bulan Terakhir (Line Chart)</h4>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Tren Performa 3 Bulan Terakhir (Line Chart)</h4>
                     <div class="w-full h-64 relative">
                         <canvas id="lineChartAdminOverview"></canvas>
                     </div>
                 </div>
             </div>
+
+            <script>
+            (function() {
+                var currKpiData      = @json($currKpiData);
+                var prevKpiData      = @json($prevKpiData);
+                var histLabels       = @json($historyLabels);
+                var histKehadiran    = @json($historyData['kehadiran']);
+                var histKeahlian     = @json($historyData['keahlian']);
+                var histKeaktifan    = @json($historyData['keaktifan']);
+                var histKedisiplinan = @json($historyData['kedisiplinan']);
+                var histMean         = @json($historyData['mean']);
+                var bulanIni         = '{{ now()->format('m-Y') }}';
+
+                function initOverviewCharts() {
+                    if (typeof window.Chart === 'undefined') {
+                        setTimeout(initOverviewCharts, 100);
+                        return;
+                    }
+                    var canvasRadar = document.getElementById('radarChartAdminOverview');
+                    var canvasLine  = document.getElementById('lineChartAdminOverview');
+                    if (!canvasRadar || !canvasLine) {
+                        setTimeout(initOverviewCharts, 100);
+                        return;
+                    }
+
+                    if (window._radarChartAdminOverview) {
+                        window._radarChartAdminOverview.destroy();
+                    }
+                    window._radarChartAdminOverview = new window.Chart(canvasRadar.getContext('2d'), {
+                        type: 'radar',
+                        data: {
+                            labels: ['Kehadiran', 'Keahlian', 'Keaktifan', 'Kedisiplinan'],
+                            datasets: [
+                                {
+                                    label: 'Bulan Ini (' + bulanIni + ')',
+                                    data: currKpiData,
+                                    fill: true,
+                                    backgroundColor: 'rgba(14, 165, 233, 0.2)',
+                                    borderColor: '#0ea5e9',
+                                    pointBackgroundColor: '#0ea5e9',
+                                },
+                                {
+                                    label: 'Bulan Sebelumnya',
+                                    data: prevKpiData,
+                                    fill: true,
+                                    backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                                    borderColor: '#94a3b8',
+                                    pointBackgroundColor: '#94a3b8',
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                r: { suggestedMin: 0, suggestedMax: 5, ticks: { stepSize: 1 } }
+                            }
+                        }
+                    });
+
+                    if (window._lineChartAdminOverview) {
+                        window._lineChartAdminOverview.destroy();
+                    }
+                    window._lineChartAdminOverview = new window.Chart(canvasLine.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: histLabels,
+                            datasets: [
+                                {
+                                    label: 'Kehadiran',
+                                    data: histKehadiran,
+                                    borderColor: '#0ea5e9',
+                                    backgroundColor: '#0ea5e9',
+                                    tension: 0.3,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Keahlian',
+                                    data: histKeahlian,
+                                    borderColor: '#10b981',
+                                    backgroundColor: '#10b981',
+                                    tension: 0.3,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Keaktifan',
+                                    data: histKeaktifan,
+                                    borderColor: '#a855f7',
+                                    backgroundColor: '#a855f7',
+                                    tension: 0.3,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Kedisiplinan',
+                                    data: histKedisiplinan,
+                                    borderColor: '#f59e0b',
+                                    backgroundColor: '#f59e0b',
+                                    tension: 0.3,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Overall Mean',
+                                    data: histMean,
+                                    borderColor: '#ef4444',
+                                    backgroundColor: '#ef4444',
+                                    borderDash: [5, 5],
+                                    tension: 0.3,
+                                    fill: false
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: { suggestedMin: 0, suggestedMax: 5, ticks: { stepSize: 1 } }
+                            }
+                        }
+                    });
+                }
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', initOverviewCharts);
+                } else {
+                    initOverviewCharts();
+                }
+
+                document.addEventListener('livewire:navigated', initOverviewCharts);
+            })();
+            </script>
 
             <!-- Notes & Overall Score -->
             <div class="mt-6 pt-6 border-t border-slate-100 space-y-4">
@@ -286,6 +309,19 @@
                 </div>
 
                 @if($currentKpi)
+                    @if(($currentKpi->score / 20) < 3)
+                        <div class="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-start gap-3">
+                            <div class="flex-shrink-0 text-rose-600 bg-white p-1.5 rounded-xl border border-rose-100 shadow-sm">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h5 class="text-xs font-bold text-rose-800">Evaluasi Performa & Peningkatan Diri</h5>
+                                <p class="text-xs text-rose-600/90 mt-1 leading-relaxed">Nilai rata-rata KPI Anda bulan ini berada di bawah standar target (3.00 / 5.00). Harap lakukan evaluasi diri pada aspek-aspek yang kurang optimal, tetap semangat, dan mari bersama-sama tingkatkan performa kerja di bulan berikutnya!</p>
+                            </div>
+                        </div>
+                    @endif
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         @php
                             $keys = [

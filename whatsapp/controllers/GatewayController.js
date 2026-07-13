@@ -36,6 +36,16 @@ export class GatewayController {
         }
     }
 
+    static async reset(req, res) {
+        try {
+            await whatsappService.reset();
+            return res.json({ status: true, message: 'WhatsApp session has been force-reset and cleared.' });
+        } catch (err) {
+            console.error('Error resetting session:', err.message);
+            return res.status(500).json({ status: false, message: 'Failed to reset session: ' + err.message });
+        }
+    }
+
     static async getQrPage(req, res) {
         if (whatsappService.connectionState === 'connected') {
             return res.send('<h1>WhatsApp is already connected!</h1>');

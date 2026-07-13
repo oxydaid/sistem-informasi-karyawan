@@ -29,6 +29,7 @@ const HOST = process.env.WA_GATEWAY_HOST || '0.0.0.0';
 app.get('/status', GatewayController.getStatus);
 app.post('/connect', authenticate, GatewayController.connect);
 app.post('/logout', authenticate, GatewayController.logout);
+app.post('/reset', authenticate, GatewayController.reset);
 app.get('/qr', GatewayController.getQrPage);
 app.post('/send-message', authenticate, GatewayController.sendMessage);
 app.post('/broadcast', authenticate, GatewayController.broadcast);

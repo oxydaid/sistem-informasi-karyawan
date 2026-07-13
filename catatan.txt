@@ -1,9 +1,0 @@
-context perubahan fitur KPI 
-- kini KPI bukan lagi penilaian rating dan potong/bonus gaji tapi sesuai namanya diambil dari 4 key (kehadiran, keahlian, keaktifan, kedisiplinan) dengan nilai skala 1-5, penilaian per bulan
-- terdapat catatan tiap keysnya
-- detail/analitics KPI bisa dilihat user dan admin, user/karyawan biasa hanya bisa lihat punya dia sendiri
-- menggunakan statistik jaring(spider chart) 
-- KpiService.php, untuk rencana pengembangan kedepanya (tidak untuk saat ini)
-  - Kehadiran mengambil jumlah kehadiran absensi dari website lain melalui API, tapi juga ada pembanding karena setiap karyawan juga punya hari libur khusus/custom (bukan/beda dari cuti) jadi untuk ini juga perlu ada pengaturan manual
-  - keahlian memiliki fitur khusus yaitu dari sertifikat keahlian yang di ambil dari form berkas pada model karyawan sudah termasuk nilai 5 jika kosong maka nilai default 3
-  - hanya 2 key itu yang punya fitur khusus kedepanya 2 lainnya manual

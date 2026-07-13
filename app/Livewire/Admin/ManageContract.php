@@ -57,6 +57,16 @@ class ManageContract extends Component
         $this->applicantId = $applicantId;
         $this->selectedApplicant = Applicant::findOrFail($applicantId);
         $this->startDate = now()->format('Y-m-d');
+
+        // Auto-select position and default salary if available in metadata
+        $metadata = $this->selectedApplicant->metadata ?? [];
+        if (! empty($metadata['position_id'])) {
+            $this->positionId = $metadata['position_id'];
+            $position = Position::find($this->positionId);
+            if ($position) {
+                $this->salary = $position->base_salary;
+            }
+        }
     }
 
     public function updatedPositionId($value)

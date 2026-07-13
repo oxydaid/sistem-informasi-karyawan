@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'ebilling' => [
+        'base_url' => env('EBILLING_BASE_URL', 'https://ebilling.sky.net.id'),
+        'token' => env('EBILLING_ATTENDANCE_TOKEN'),
+    ],
+
 ];

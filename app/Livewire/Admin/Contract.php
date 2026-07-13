@@ -149,20 +149,25 @@ class Contract extends Component
                 $this->salary
             );
 
-            // Update signing status
-            $contract->update([
-                'is_signed' => $this->isSigned,
-            ]);
-
-            // If it's signed and linked to employee, update employee's job status too
-            $employee = Employee::where('nik', $applicant->nik)->first();
-            if ($employee) {
-                $contract->update(['employee_id' => $employee->id]);
-                $employee->update([
-                    'position_id' => $this->positionId,
-                    'employment_status' => $this->employmentType,
-                    'join_date' => $this->startDate,
+            // Update signing status & handle user/employee creation if signed
+            if ($this->isSigned) {
+                $this->createEmployeeFromContract($contract);
+            } else {
+                $contract->update([
+                    'is_signed' => false,
+                    'status' => 'draft',
                 ]);
+
+                // If it's linked to employee, update employee's job status too
+                $employee = Employee::where('nik', $applicant->nik)->first();
+                if ($employee) {
+                    $contract->update(['employee_id' => $employee->id]);
+                    $employee->update([
+                        'position_id' => $this->positionId,
+                        'employment_status' => $this->employmentType,
+                        'join_date' => $this->startDate,
+                    ]);
+                }
             }
 
             $this->dispatch('toast', type: 'success', message: $this->isEdit ? 'Kontrak kerja berhasil diperbarui!' : 'Kontrak kerja berhasil dibuat!');

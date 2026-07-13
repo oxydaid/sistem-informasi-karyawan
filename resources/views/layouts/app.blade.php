@@ -20,7 +20,8 @@
             }
         </style>
 
-
+        <!-- Chart.js loaded before Alpine to ensure window.Chart is available -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles

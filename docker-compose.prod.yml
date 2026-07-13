@@ -1,0 +1,113 @@
+services:
+  # Laravel App and Web Server (Nginx + PHP-FPM)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_app
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      DB_HOST: db
+      DB_PORT: 3306
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      WA_GATEWAY_URL: http://whatsapp:6969
+    volumes:
+      - storage_data:/var/www/html/storage
+      - logs_data:/var/log/nginx
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  # Laravel Background Queue Worker
+  queue-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_worker
+    restart: unless-stopped
+    command: php artisan queue:work --tries=3 --timeout=90 --verbose
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      DB_HOST: db
+      DB_PORT: 3306
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      WA_GATEWAY_URL: http://whatsapp:6969
+    volumes:
+      - storage_data:/var/www/html/storage
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  # Node.js WhatsApp Gateway
+  whatsapp:
+    build:
+      context: ./whatsapp
+      dockerfile: Dockerfile
+    container_name: whatsapp_gateway
+    restart: unless-stopped
+    ports:
+      - "6969:6969"
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-manajemen_karyawan}
+      DB_USERNAME: ${DB_USERNAME:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-}
+      WA_GATEWAY_PORT: 6969
+      WA_GATEWAY_HOST: 0.0.0.0
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Database Service (MariaDB)
+  db:
+    image: mariadb:11
+    container_name: mariadb_db
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MARIADB_DATABASE: ${DB_DATABASE:-manajemen_karyawan}
+      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD:-root_password}
+      MARIADB_USER: ${DB_USERNAME:-laravel_user}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-laravel_password}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Cache and Queue Management
+  redis:
+    image: redis:7-alpine
+    container_name: redis_cache
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  storage_data:
+  logs_data:
+  db_data:
+  redis_data:

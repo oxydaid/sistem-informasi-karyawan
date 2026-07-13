@@ -1,0 +1,38 @@
+# nixpacks.toml
+# Nixpacks configuration for Coolify
+
+[variables]
+  PHP_VERSION = "8.4"
+  NODE_VERSION = "22"
+
+[phases.setup]
+  nixPkgs = [
+    "php84",
+    "php84Extensions.pdo_mysql",
+    "php84Extensions.zip",
+    "php84Extensions.gd",
+    "php84Extensions.bcmath",
+    "php84Extensions.intl",
+    "php84Extensions.mbstring",
+    "php84Extensions.opcache",
+    "nodejs_22",
+    "pnpm",
+    "nginx"
+  ]
+
+[phases.install]
+  cmds = [
+    "composer install --no-dev --optimize-autoloader --no-interaction",
+    "pnpm install --frozen-lockfile"
+  ]
+
+[phases.build]
+  cmds = [
+    "pnpm run build",
+    "php artisan config:clear",
+    "php artisan route:clear",
+    "php artisan view:clear"
+  ]
+
+[start]
+  cmd = "php artisan migrate --force && php artisan storage:link --no-interaction || true && nginx -g 'daemon off;' & php-fpm -F"

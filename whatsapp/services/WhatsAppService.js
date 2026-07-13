@@ -139,6 +139,29 @@ class WhatsAppService {
         this.loggedInUser = null;
     }
 
+    async reset() {
+        if (this.sock) {
+            try {
+                this.sock.ev.removeAllListeners();
+                this.sock.end();
+            } catch (e) {}
+            this.sock = null;
+        }
+
+        if (fs.existsSync(this.sessionDir)) {
+            try {
+                fs.rmSync(this.sessionDir, { recursive: true, force: true });
+            } catch (e) {
+                console.error('Failed to remove session directory:', e.message);
+            }
+        }
+
+        this.connectionState = 'disconnected';
+        this.latestQr = null;
+        this.loggedInUser = null;
+        console.log('WhatsApp connection has been force reset.');
+    }
+
     async sendMessage(number, message, fileUrl = null, mimetype = null, filename = null, caption = null) {
         if (this.connectionState !== 'connected' || !this.sock) {
             throw new Error('WhatsApp Gateway is not connected.');

@@ -272,6 +272,37 @@ class WhatsappGatewayService
     }
 
     /**
+     * Force reset the WhatsApp Gateway connection session.
+     */
+    public function reset(): array
+    {
+        if (! $this->apiUrl) {
+            return ['status' => false, 'message' => 'API URL not configured.'];
+        }
+
+        try {
+            $response = Http::withHeaders($this->getHeaders())
+                ->post($this->apiUrl.'/reset');
+
+            if ($response->successful()) {
+                $json = $response->json();
+
+                return is_array($json) ? $json : ['status' => true];
+            }
+
+            return [
+                'status' => false,
+                'message' => $response->json('message') ?? 'Failed to reset session.',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => false,
+                'message' => 'Gateway server is unreachable.',
+            ];
+        }
+    }
+
+    /**
      * Get request headers containing the secret authorization token.
      */
     protected function getHeaders(): array

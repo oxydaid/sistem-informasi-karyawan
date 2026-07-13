@@ -35,3 +35,26 @@
 @utility border-secondary {
     border-color: var(--color-secondary);
 }
+
+/* Force Pagination to remain Light Themed */
+nav[role="navigation"] svg {
+    color: #64748b !important;
+}
+nav[role="navigation"] a, 
+nav[role="navigation"] button, 
+nav[role="navigation"] span {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    color: #334155 !important;
+}
+nav[role="navigation"] a:hover, 
+nav[role="navigation"] button:hover {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+}
+nav[role="navigation"] span[aria-current="page"] span,
+nav[role="navigation"] span[aria-current="page"] button {
+    background-color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    color: #ffffff !important;
+}

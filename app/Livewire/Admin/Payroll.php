@@ -37,6 +37,31 @@ class Payroll extends Component
         $this->dispatch('toast', type: 'success', message: 'Gaji karyawan telah disetujui dan kasbon terkait telah diselesaikan!');
     }
 
+    public function approveAllPayroll()
+    {
+        $payrolls = PayrollModel::where('month_year', $this->monthYear)
+            ->where('status', 'draft')
+            ->get();
+
+        if ($payrolls->isEmpty()) {
+            $this->dispatch('toast', type: 'warning', message: 'Tidak ada data gaji berstatus Draft untuk disetujui pada periode ini.');
+
+            return;
+        }
+
+        \DB::transaction(function () use ($payrolls) {
+            foreach ($payrolls as $payroll) {
+                $payroll->update(['status' => 'approved']);
+
+                CashAdvance::where('payroll_id', $payroll->id)
+                    ->where('status', 'approved')
+                    ->update(['status' => 'settled']);
+            }
+        });
+
+        $this->dispatch('toast', type: 'success', message: 'Seluruh gaji karyawan pada periode ini berhasil disetujui secara massal!');
+    }
+
     public function payPayroll($id, PayrollService $payrollService)
     {
         $payroll = PayrollModel::findOrFail($id);

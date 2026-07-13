@@ -247,6 +247,11 @@
                                         class="w-full mt-4 inline-flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200/80 px-3 py-2 text-xs font-bold text-slate-700 transition active:scale-[0.98]">
                                     <span>Muat Ulang / QR Baru</span>
                                 </button>
+                                <button type="button" wire:click="resetWhatsapp" 
+                                        wire:confirm="Apakah Anda yakin ingin me-reset sesi WhatsApp? Sesi pairing saat ini akan dihapus sepenuhnya dari server."
+                                        class="w-full mt-2 inline-flex items-center justify-center rounded-xl bg-rose-50 hover:bg-rose-100/80 px-3 py-2 text-xs font-bold text-rose-700 transition active:scale-[0.98]">
+                                    <span>Reset Sesi WhatsApp</span>
+                                </button>
                             </div>
                         @else
                             <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-center space-y-3">
@@ -260,6 +265,11 @@
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
                                     <span>Hubungkan WhatsApp / Generate QR</span>
+                                </button>
+                                <button type="button" wire:click="resetWhatsapp"
+                                        wire:confirm="Apakah Anda yakin ingin me-reset sesi WhatsApp? Sesi pairing saat ini akan dihapus sepenuhnya dari server."
+                                        class="w-full inline-flex items-center justify-center rounded-xl bg-rose-50 hover:bg-rose-100/80 px-3 py-2.5 text-xs font-bold text-rose-700 transition active:scale-[0.98]">
+                                    <span>Reset Sesi WhatsApp</span>
                                 </button>
                                 <p class="text-[9px] text-slate-400 mt-1">Pastikan server Node.js di folder <code class="bg-slate-100 px-1 py-0.5 rounded">whatsapp/</code> sedang berjalan.</p>
                             </div>

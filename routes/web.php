@@ -2,6 +2,7 @@
 
 use App\Livewire\Admin\Applicant;
 use App\Livewire\Admin\AppSetting;
+use App\Livewire\Admin\Attendance;
 use App\Livewire\Admin\CashAdvance;
 use App\Livewire\Admin\Contract;
 use App\Livewire\Admin\Department;
@@ -67,6 +68,7 @@ Route::middleware('auth')->group(function () {
         Route::livewire('/kontrak', Contract::class)->name('admin.contracts');
         Route::livewire('/karyawan', Employee::class)->name('admin.employees');
         Route::livewire('/departemen', Department::class)->name('admin.departments');
+        Route::livewire('/absensi', Attendance::class)->name('admin.attendances');
         Route::livewire('/cuti', LeaveRequest::class)->name('admin.leaves');
         Route::livewire('/kpi', Kpi::class)->name('admin.kpi');
         Route::livewire('/penggajian', Payroll::class)->name('admin.payrolls');

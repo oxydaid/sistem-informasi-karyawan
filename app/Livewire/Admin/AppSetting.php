@@ -187,6 +187,23 @@ class AppSetting extends Component
         $this->updateGatewayStatus();
     }
 
+    /**
+     * Force reset and wipe WhatsApp session files
+     */
+    public function resetWhatsapp()
+    {
+        $gateway = new WhatsappGatewayService;
+        $response = $gateway->reset();
+
+        if ($response['status'] ?? false) {
+            $this->dispatch('toast', type: 'success', message: 'Sesi WhatsApp berhasil di-reset ke kondisi awal!');
+        } else {
+            $this->dispatch('toast', type: 'error', message: $response['message'] ?? 'Gagal me-reset sesi WhatsApp.');
+        }
+
+        $this->updateGatewayStatus();
+    }
+
     public function render()
     {
         return view('livewire.admin.app-setting')

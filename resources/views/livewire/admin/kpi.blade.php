@@ -172,6 +172,22 @@
                             </div>
                             @error($key) <span class="text-[10px] text-rose-600 font-semibold block mt-0.5">{{ $message }}</span> @enderror
 
+                            @if($key === 'keahlian')
+                                <div class="text-[10px] font-semibold flex items-center gap-1.5 mt-2 {{ !empty($selectedEmployee->documents['sertifikat']) ? 'text-emerald-600' : 'text-slate-500' }}">
+                                    @if(!empty($selectedEmployee->documents['sertifikat']))
+                                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span>Sertifikat keahlian terdeteksi. Nilai keahlian otomatis dimulai dari 5.</span>
+                                    @else
+                                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span>Sertifikat keahlian tidak terdeteksi. Nilai keahlian otomatis dimulai dari 3.</span>
+                                    @endif
+                                </div>
+                            @endif
+
                             <!-- Note -->
                             <div class="mt-2">
                                 <input type="text" wire:model="{{ $key }}_notes" placeholder="Tulis catatan penunjang untuk nilai ini..."

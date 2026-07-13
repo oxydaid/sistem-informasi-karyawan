@@ -1,0 +1,108 @@
+services:
+  # Laravel Sail Web Runtime
+  laravel.test:
+    image: laravelphp/sail:8.4
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    ports:
+      - '${APP_PORT:-80}:80'
+      - '${VITE_PORT:-5173}:5173'
+    environment:
+      WWWUSER: '${WWWUSER:-1000}'
+      LARAVEL_SAIL: 1
+      XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
+      XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
+      IGNITION_LOCAL_SITES_PATH: '${APP_PATH}'
+    volumes:
+      - '.:/var/www/html'
+    networks:
+      - sail
+    depends_on:
+      - mariadb
+      - redis
+      - mailpit
+      - whatsapp-gateway
+
+  # WhatsApp Gateway Service (Development)
+  whatsapp-gateway:
+    image: node:22-alpine
+    container_name: sail_whatsapp_gateway
+    working_dir: /app
+    ports:
+      - '${WA_GATEWAY_PORT:-6969}:6969'
+    volumes:
+      - './whatsapp:/app'
+    command: sh -c "npm install && npm start"
+    environment:
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_DATABASE: '${DB_DATABASE:-manajemen_karyawan}'
+      DB_USERNAME: '${DB_USERNAME:-root}'
+      DB_PASSWORD: '${DB_PASSWORD:-}'
+      WA_GATEWAY_PORT: 6969
+      WA_GATEWAY_HOST: 0.0.0.0
+    networks:
+      - sail
+    depends_on:
+      - mariadb
+
+  # Database Service (MariaDB)
+  mariadb:
+    image: 'mariadb:10.11'
+    ports:
+      - '${FORWARD_DB_PORT:-3306}:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD:-}'
+      MYSQL_DATABASE: '${DB_DATABASE:-manajemen_karyawan}'
+      MYSQL_USER: '${DB_USERNAME:-root}'
+      MYSQL_PASSWORD: '${DB_PASSWORD:-}'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    volumes:
+      - 'sail-mariadb:/var/lib/mysql'
+      - './vendor/laravel/sail/database/mariadb/create-testing-database.sh:/docker-entrypoint-initdb.d/10-create-testing-database.sh'
+    networks:
+      - sail
+    healthcheck:
+      test:
+        - CMD
+        - healthcheck.sh
+        - '--connect'
+        - '--innodb_initialized'
+      retries: 5
+      timeout: 5s
+
+  # Cache and Queue Storage (Redis)
+  redis:
+    image: 'redis:alpine'
+    ports:
+      - '${FORWARD_REDIS_PORT:-6379}:6379'
+    volumes:
+      - 'sail-redis:/data'
+    networks:
+      - sail
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      retries: 3
+      timeout: 5s
+
+  # Mail Sandbox Service (Mailpit)
+  mailpit:
+    image: 'axllent/mailpit:latest'
+    ports:
+      - '${FORWARD_MAILPIT_PORT:-1025}:1025'
+      - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
+    networks:
+      - sail
+
+networks:
+  sail:
+    driver: bridge
+
+volumes:
+  sail-mariadb:
+    driver: local
+  sail-redis:
+    driver: local
