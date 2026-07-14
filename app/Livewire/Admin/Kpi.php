@@ -205,6 +205,7 @@ class Kpi extends Component
     {
         $user = auth()->user();
         $query = Employee::with(['user', 'position.department'])
+            ->where('is_active', true)
             ->when($this->search, function ($q) {
                 $q->where(function ($inner) {
                     $inner->whereHas('user', function ($u) {

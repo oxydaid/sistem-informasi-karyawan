@@ -139,15 +139,23 @@
 
                             <!-- Mapping Selector -->
                             <td class="whitespace-nowrap px-6 py-4">
-                                <select wire:change="mapEmployee('{{ $row->sender_name }}', $event.target.value)" 
-                                        class="block w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-1.5 text-xs text-slate-700 focus:border-primary focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary/20 transition font-medium">
-                                    <option value="">-- Pilih Karyawan --</option>
-                                    @foreach($employeesList as $emp)
-                                        <option value="{{ $emp->id }}" {{ $row->employee_id == $emp->id ? 'selected' : '' }}>
-                                            {{ $emp->user->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                @if($row->employee_id)
+                                    <button type="button" wire:click="openMapModal('{{ $row->sender_name }}')"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition w-full justify-between shadow-sm">
+                                        <span class="max-w-[120px] truncate text-slate-800">{{ $row->display_name }}</span>
+                                        <svg class="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                        </svg>
+                                    </button>
+                                @else
+                                    <button type="button" wire:click="openMapModal('{{ $row->sender_name }}')"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-dashed border-slate-300 bg-slate-50/50 hover:bg-slate-100 text-xs font-semibold text-primary transition w-full justify-center">
+                                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                        </svg>
+                                        Hubungkan
+                                    </button>
+                                @endif
                             </td>
 
                             <!-- Daily Cells -->
@@ -303,6 +311,82 @@
                     <button type="button" wire:click="saveStatus"
                             class="px-5 py-2.5 bg-primary hover:bg-sky-600 text-xs font-semibold text-white rounded-xl shadow-lg shadow-sky-500/20 transition">
                         Simpan Perubahan
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Searchable Employee Mapping Modal -->
+    @if($showMapModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <!-- Modal backdrop -->
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" wire:click="$set('showMapModal', false)"></div>
+
+            <!-- Modal Content -->
+            <div class="relative z-10 bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-6">
+                <!-- Modal header -->
+                <div class="flex items-center justify-between border-b border-dashed border-slate-200 pb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Petakan Pengirim Absensi</h3>
+                        <p class="text-xs text-slate-400 mt-1">Pengirim WhatsApp: <span class="font-bold text-slate-700">{{ $mapSenderName }}</span></p>
+                    </div>
+                    <button type="button" wire:click="$set('showMapModal', false)" class="text-slate-400 hover:text-slate-600 transition">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Cari Karyawan Aktif</label>
+                        <div class="relative">
+                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                <svg class="h-4.5 w-4.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <input wire:model.live.debounce.250ms="searchEmployee" type="text" placeholder="Ketik nama karyawan..." 
+                                   class="block w-full rounded-2xl border border-slate-200 bg-slate-50/50 pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition font-semibold">
+                        </div>
+                    </div>
+
+                    <!-- Search Results -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Hasil Pencarian</label>
+                        <div class="max-h-60 overflow-y-auto divide-y divide-slate-100 border border-slate-100 rounded-2xl bg-slate-50/20">
+                            @forelse($searchEmployeesList as $emp)
+                                <button type="button" wire:click="mapEmployee('{{ $mapSenderName }}', {{ $emp->id }})"
+                                        class="w-full flex items-center justify-between p-3 hover:bg-slate-100/80 transition text-left">
+                                    <div>
+                                        <div class="text-sm font-bold text-slate-900">{{ $emp->user->name }}</div>
+                                        <div class="text-xs text-slate-400 mt-0.5">NIK: {{ $emp->employee_id_number }} | {{ $emp->position->name ?? '-' }}</div>
+                                    </div>
+                                    <svg class="h-5 w-5 text-primary opacity-0 hover:opacity-100 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+                            @empty
+                                <div class="p-4 text-center text-xs text-slate-400 font-medium">
+                                    Tidak ada karyawan aktif yang cocok.
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex justify-between items-center pt-4 border-t border-slate-100">
+                    <button type="button" wire:click="mapEmployee('{{ $mapSenderName }}', '')"
+                            class="px-4 py-2 border border-rose-200 bg-rose-50/40 hover:bg-rose-100 text-xs font-semibold text-rose-600 rounded-xl transition">
+                        Hapus Pemetaan
+                    </button>
+                    
+                    <button type="button" wire:click="$set('showMapModal', false)"
+                            class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200/80 text-xs font-semibold text-slate-700 rounded-xl transition">
+                        Tutup
                     </button>
                 </div>
             </div>

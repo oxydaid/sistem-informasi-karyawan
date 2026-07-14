@@ -58,6 +58,8 @@ class Employee extends Component
 
     public $base_salary = '';
 
+    public $is_active = true;
+
     // OCR KTP / Metadata Fields
     public $tempat_lahir = '';
 
@@ -133,10 +135,11 @@ class Employee extends Component
     public function openCreateModal()
     {
         $this->resetValidation();
-        $this->reset(['name', 'email', 'password', 'position_id', 'employee_id_number', 'nik', 'phone', 'address', 'employment_status', 'join_date', 'leave_quota', 'base_salary', 'tempat_lahir', 'tanggal_lahir', 'jenis_kelamin', 'agama', 'status_kawin', 'pekerjaan', 'kewarganegaraan', 'documents', 'activeDocUrl', 'signedContractPath', 'fileKtp', 'fileKk', 'fileIjazah', 'fileSkck', 'filePasFoto', 'fileCv', 'fileSim', 'fileSertifikat', 'filePendukung']);
+        $this->reset(['name', 'email', 'password', 'position_id', 'employee_id_number', 'nik', 'phone', 'address', 'employment_status', 'join_date', 'leave_quota', 'is_active', 'base_salary', 'tempat_lahir', 'tanggal_lahir', 'jenis_kelamin', 'agama', 'status_kawin', 'pekerjaan', 'kewarganegaraan', 'documents', 'activeDocUrl', 'signedContractPath', 'fileKtp', 'fileKk', 'fileIjazah', 'fileSkck', 'filePasFoto', 'fileCv', 'fileSim', 'fileSertifikat', 'filePendukung']);
         $this->isEditing = false;
         $this->join_date = date('Y-m-d');
         $this->leave_quota = 12;
+        $this->is_active = true;
         $this->kewarganegaraan = 'WNI';
         $this->showEmployeeModal = true;
     }
@@ -160,6 +163,7 @@ class Employee extends Component
         $this->employment_status = $employee->employment_status;
         $this->join_date = $employee->join_date ? $employee->join_date->format('Y-m-d') : '';
         $this->leave_quota = $employee->leave_quota;
+        $this->is_active = (bool) $employee->is_active;
         $this->base_salary = $employee->base_salary;
 
         // Load KTP Metadata & Documents
@@ -199,6 +203,7 @@ class Employee extends Component
             'employment_status' => 'required|in:magang,pkl,kontrak,tetap,freelance',
             'join_date' => 'required|date',
             'leave_quota' => 'nullable|integer|min:0',
+            'is_active' => 'required|boolean',
             'base_salary' => 'nullable|numeric|min:0',
 
             // File upload rules
@@ -222,6 +227,7 @@ class Employee extends Component
             'nik' => 'NIK KTP',
             'phone' => 'No. Handphone/WA',
             'leave_quota' => 'Kuota Cuti',
+            'is_active' => 'Status Keaktifan',
             'base_salary' => 'Gaji Pokok',
         ]);
 
@@ -326,6 +332,7 @@ class Employee extends Component
                     'employment_status' => $this->employment_status,
                     'join_date' => $this->join_date,
                     'leave_quota' => $this->leave_quota,
+                    'is_active' => $this->is_active,
                     'base_salary' => $this->base_salary ?: null,
                     'documents' => $docs,
                     'metadata' => $metadata,
@@ -353,6 +360,7 @@ class Employee extends Component
                     'employment_status' => $this->employment_status,
                     'join_date' => $this->join_date,
                     'leave_quota' => $this->leave_quota,
+                    'is_active' => $this->is_active,
                     'base_salary' => $this->base_salary ?: null,
                     'documents' => $docs,
                     'metadata' => $metadata,

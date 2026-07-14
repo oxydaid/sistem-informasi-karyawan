@@ -198,14 +198,26 @@
                                 <div class="text-xs text-slate-400 mt-0.5">{{ $emp->position->department->name ?? '-' }}</div>
                             </td>
                             <td class="whitespace-nowrap px-6 py-4">
-                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold capitalize
-                                    {{ $emp->employment_status === 'tetap' ? 'bg-emerald-50 text-emerald-700' : '' }}
-                                    {{ $emp->employment_status === 'kontrak' ? 'bg-sky-50 text-sky-700' : '' }}
-                                    {{ $emp->employment_status === 'magang' ? 'bg-amber-50 text-amber-700' : '' }}
-                                    {{ $emp->employment_status === 'pkl' ? 'bg-purple-50 text-purple-700' : '' }}
-                                    {{ $emp->employment_status === 'freelance' ? 'bg-slate-50 text-slate-700' : '' }}
-                                ">
-                                    {{ $emp->employment_status }}
+                                <div class="flex items-center gap-1.5">
+                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold capitalize
+                                        {{ $emp->employment_status === 'tetap' ? 'bg-emerald-50 text-emerald-700' : '' }}
+                                        {{ $emp->employment_status === 'kontrak' ? 'bg-sky-50 text-sky-700' : '' }}
+                                        {{ $emp->employment_status === 'magang' ? 'bg-amber-50 text-amber-700' : '' }}
+                                        {{ $emp->employment_status === 'pkl' ? 'bg-purple-50 text-purple-700' : '' }}
+                                        {{ $emp->employment_status === 'freelance' ? 'bg-slate-50 text-slate-700' : '' }}
+                                    ">
+                                        {{ $emp->employment_status }}
+                                    </div>
+                                    
+                                    @if($emp->is_active)
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-100">
+                                            Aktif
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-700 border border-rose-100">
+                                            Non-Aktif
+                                        </span>
+                                    @endif
                                 </div>
                                 <div class="mt-1 text-xs text-slate-400">Join: {{ $emp->join_date ? $emp->join_date->format('d M Y') : '-' }}</div>
                             </td>
@@ -376,8 +388,18 @@
                                     <div>
                                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Gaji Pokok (Rp) <span class="text-xs text-slate-400 font-normal">(Kosongkan untuk pakai default divisi)</span></label>
                                         <input wire:model="base_salary" type="number" min="0" placeholder="Masukkan gaji pokok..."
-                                               class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition font-semibold font-semibold">
+                                               class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition font-semibold">
                                         @error('base_salary') <span class="text-[10px] text-rose-600 font-semibold mt-1 block">{{ $message }}</span> @enderror
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Status Keaktifan <span class="text-rose-500">*</span></label>
+                                        <select wire:model="is_active" 
+                                                class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition font-semibold">
+                                            <option value="1">Aktif</option>
+                                            <option value="0">Tidak Aktif</option>
+                                        </select>
+                                        @error('is_active') <span class="text-[10px] text-rose-600 font-semibold mt-1 block">{{ $message }}</span> @enderror
                                     </div>
                                 </div>
 

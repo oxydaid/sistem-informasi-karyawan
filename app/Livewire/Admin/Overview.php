@@ -16,7 +16,7 @@ class Overview extends Component
     public function render()
     {
         $stats = [
-            'total_employees' => Employee::count(),
+            'total_employees' => Employee::where('is_active', true)->count(),
             'pending_applicants' => Applicant::where('status', 'pending')->count(),
             'pending_leaves' => LeaveRequest::where('status', 'pending')->count(),
             'active_payrolls' => Payroll::where('month_year', now()->format('m-Y'))->count(),

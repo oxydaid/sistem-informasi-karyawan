@@ -203,6 +203,7 @@ class CashAdvance extends Component
         $searchEmployees = [];
         if ($this->searchEmployee !== '') {
             $searchEmployees = Employee::with('user')
+                ->where('is_active', true)
                 ->whereHas('user', function ($q) {
                     $q->where('name', 'like', '%'.$this->searchEmployee.'%');
                 })
@@ -210,6 +211,7 @@ class CashAdvance extends Component
                 ->get();
         } else {
             $searchEmployees = Employee::with('user')
+                ->where('is_active', true)
                 ->limit(5)
                 ->get();
         }

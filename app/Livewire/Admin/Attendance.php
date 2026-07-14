@@ -33,6 +33,11 @@ class Attendance extends Component
 
     public $modalCaption = null;
 
+    // Mapping Modal state variables
+    public $showMapModal = false;
+    public $mapSenderName = '';
+    public $searchEmployee = '';
+
     protected $queryString = ['search', 'monthYear'];
 
     public function updatingSearch()
@@ -109,6 +114,16 @@ class Attendance extends Component
     }
 
     /**
+     * Open modal to map employee to sender.
+     */
+    public function openMapModal($senderName)
+    {
+        $this->mapSenderName = $senderName;
+        $this->searchEmployee = '';
+        $this->showMapModal = true;
+    }
+
+    /**
      * Update the employee mapping for a given sender_name.
      */
     public function mapEmployee($senderName, $employeeId)
@@ -141,6 +156,8 @@ class Attendance extends Component
                 'employee_id' => null
             ]);
         }
+
+        $this->showMapModal = false;
 
         $this->dispatch('toast',
             type: 'success',
@@ -260,7 +277,7 @@ class Attendance extends Component
         $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
 
         // Fetch all active employees
-        $employeesQuery = Employee::with('user');
+        $employeesQuery = Employee::with('user')->where('is_active', true);
         if ($this->search) {
             $employeesQuery->whereHas('user', function ($q) {
                 $q->where('name', 'like', '%'.$this->search.'%');
@@ -332,14 +349,32 @@ class Attendance extends Component
             $attendanceMap[$att->sender_name][$att->date->format('Y-m-d')] = $att;
         }
 
+        // Searchable employees list for mapping modal
+        $searchEmployeesList = [];
+        if ($this->searchEmployee !== '') {
+            $searchEmployeesList = Employee::with('user')
+                ->where('is_active', true)
+                ->whereHas('user', function ($q) {
+                    $q->where('name', 'like', '%'.$this->searchEmployee.'%');
+                })
+                ->limit(5)
+                ->get();
+        } else {
+            $searchEmployeesList = Employee::with('user')
+                ->where('is_active', true)
+                ->limit(5)
+                ->get();
+        }
+
         // Prepare lists for mappings
-        $employeesList = Employee::with('user')->get();
+        $employeesList = Employee::with('user')->where('is_active', true)->get();
 
         return view('livewire.admin.attendance', [
             'rows' => $paginatedRows,
             'daysInMonth' => $daysInMonth,
             'attendanceMap' => $attendanceMap,
             'employeesList' => $employeesList,
+            'searchEmployeesList' => $searchEmployeesList,
             'year' => $year,
             'month' => $month,
         ])->layout('layouts.app');

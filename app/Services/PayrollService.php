@@ -129,8 +129,8 @@ class PayrollService
         $settings = AppSetting::first();
         $deductionAmount = $settings->leave_deduction_amount ?? 50000;
 
-        // 4. Chunk process employees to keep memory low
-        Employee::with(['position'])->chunk(100, function ($employees) use ($monthYear, $leaves, $cashAdvancesGrouped, $deductionAmount) {
+        // 4. Chunk process active employees only to keep memory low
+        Employee::where('is_active', true)->with(['position'])->chunk(100, function ($employees) use ($monthYear, $leaves, $cashAdvancesGrouped, $deductionAmount) {
             foreach ($employees as $employee) {
                 // Base salary from employee (fallback to position base salary if empty)
                 $baseSalary = ! empty($employee->base_salary) && $employee->base_salary > 0
