@@ -44,23 +44,32 @@ class AttendanceService
         Log::info("Fetching attendance from eBilling API: {$url} for date: {$date}");
 
         try {
-            $response = Http::withHeaders([
-                'X-Attendance-Token' => $this->token,
-                'Accept' => 'application/json',
-            ])->timeout(30)->get($url, [
-                'date' => $date,
-                'per_page' => 500,
-            ]);
+            $page = 1;
+            $attendances = [];
+            do {
+                $response = Http::withHeaders([
+                    'X-Attendance-Token' => $this->token,
+                    'Accept' => 'application/json',
+                ])->timeout(30)->get($url, [
+                    'date' => $date,
+                    'per_page' => 500,
+                    'page' => $page,
+                ]);
 
-            if ($response->failed()) {
-                $status = $response->status();
-                $body = $response->body();
-                Log::error("eBilling API Error (HTTP {$status}): {$body}");
-                throw new Exception("eBilling API returned error status {$status}: {$body}");
-            }
+                if ($response->failed()) {
+                    $status = $response->status();
+                    $body = $response->body();
+                    Log::error("eBilling API Error (HTTP {$status}): {$body}");
+                    throw new Exception("eBilling API returned error status {$status}: {$body}");
+                }
 
-            $data = $response->json();
-            $attendances = $data['attendances'] ?? [];
+                $data = $response->json();
+                $pageAttendances = $data['attendances'] ?? [];
+                $attendances = array_merge($attendances, $pageAttendances);
+                
+                $total = $data['total'] ?? 0;
+                $page++;
+            } while (count($attendances) < $total && count($pageAttendances) > 0);
 
             $importedCount = 0;
             $skippedCount = 0;
@@ -148,24 +157,33 @@ class AttendanceService
         Log::info("Fetching attendance range from eBilling API: {$url} from {$from} to {$to}");
 
         try {
-            $response = Http::withHeaders([
-                'X-Attendance-Token' => $this->token,
-                'Accept' => 'application/json',
-            ])->timeout(60)->get($url, [
-                'from' => $from,
-                'to' => $to,
-                'per_page' => 500
-            ]);
+            $page = 1;
+            $attendances = [];
+            do {
+                $response = Http::withHeaders([
+                    'X-Attendance-Token' => $this->token,
+                    'Accept' => 'application/json',
+                ])->timeout(60)->get($url, [
+                    'from' => $from,
+                    'to' => $to,
+                    'per_page' => 500,
+                    'page' => $page,
+                ]);
 
-            if ($response->failed()) {
-                $status = $response->status();
-                $body = $response->body();
-                Log::error("eBilling API Error (HTTP {$status}): {$body}");
-                throw new Exception("eBilling API returned error status {$status}: {$body}");
-            }
+                if ($response->failed()) {
+                    $status = $response->status();
+                    $body = $response->body();
+                    Log::error("eBilling API Error (HTTP {$status}): {$body}");
+                    throw new Exception("eBilling API returned error status {$status}: {$body}");
+                }
 
-            $data = $response->json();
-            $attendances = $data['attendances'] ?? [];
+                $data = $response->json();
+                $pageAttendances = $data['attendances'] ?? [];
+                $attendances = array_merge($attendances, $pageAttendances);
+
+                $total = $data['total'] ?? 0;
+                $page++;
+            } while (count($attendances) < $total && count($pageAttendances) > 0);
             
             $importedCount = 0;
             $skippedCount = 0;
